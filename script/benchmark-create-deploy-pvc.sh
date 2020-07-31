@@ -38,8 +38,23 @@ function checkPodsScheduled(){
 
 function checkPodsRunning(){
     finishedPods=0
+    outarray=(1 2 4 8 16 32 64 128 256 512 1024 2048)
+    finalarray=(8 4 2 1 0)
     while [[ ${finishedPods} -ne ${TOTAL_POD_NUM} ]];do
+        if [[ -f /tmp/debug ]]; then
+            echo ${finishedPods} ${TOTAL_POD_NUM}
+        fi
+        first=${outarray[0]}
+        final=${finalarray[0]}
         finishedPods=`kubectl -n ${NAMESPACE} get pod | grep ${BASE_NAME}| grep -v "NAME" | grep  "Running" | wc -l`
+        if [[ $finishedPods -ge $first ]]; then
+             echo "First $first($finishedPods) Pod Running:            `date +%Y-%m-%d' '%H:%M:%S.%N`"
+             outarray=(${outarray[@]:1})
+        fi
+        if [[ $finishedPods -ge $(($TOTAL_POD_NUM-$final)) ]]; then
+             echo "Final $final($finishedPods) Pod Running:            `date +%Y-%m-%d' '%H:%M:%S.%N`"
+             finalarray=(${finalarray[@]:1})
+        fi
     done
     echo "All pods Running:        `date +%Y-%m-%d' '%H:%M:%S.%N`"
 }

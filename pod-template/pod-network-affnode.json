@@ -16,7 +16,7 @@
           "-c",
           "sleep 7200"
         ],
-        "image":"swr.cn-north-4.myhuaweicloud.com/cci-perf/tensorflow:1.15.2-gpu-netcheck",
+        "image":"POD_IMAGE",
         "imagePullPolicy":"Always",
         "lifecycle":{
           "postStart":{
