@@ -10,7 +10,9 @@ function createPod(){
     podName="${BASE_NAME}-${id}"
     pod=${POD_TEMPLATE//POD_NAME/${podName}}
     pod=${pod//NAMESPACE/${NAMESPACE}}
-    curl -k -X POST -H "Content-Type:application/json" -H "X-Auth-Token:${token}" $endpoint/api/v1/namespaces/${NAMESPACE}/pods -d "${pod}" -s 2>&1 >> /tmp/curl-create-pod.log
+    pod=${pod//POD_IMAGE/${POD_IMAGE}}
+    #curl -k -X POST -H "Content-Type:application/json" -H "X-Auth-Token:${token}" $endpoint/api/v1/namespaces/${NAMESPACE}/pods -d "${pod}" -s 2>&1 >> /tmp/curl-create-pod.log
+    echo $pod | kubectl create -f -
 }
 
 function createPods(){
@@ -52,6 +54,7 @@ while test $# -gt 0; do
             echo "     options:"
             echo "     -h, --help            show brief help"
             echo "     --pod-num             set pods number to create. Default: 500"
+            echo "     --image               set pods image"
             echo "     --name                set pod base name, will use this name and id to generate pod name. Default: sina-test"
             echo "     --namespace           set namespace to create pod, this namespace should already created. Default: sina-test"
             echo "     --pod-template        the file path of pod template in json format"
@@ -72,6 +75,10 @@ while test $# -gt 0; do
             ;;
         --pod-num)
             POD_NUM=${2}
+            shift 2
+            ;;
+        --image)
+            POD_IMAGE=${2}
             shift 2
             ;;
         *)

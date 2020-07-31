@@ -47,12 +47,12 @@
             "name": "container-0",
             "resources": {
               "limits": {
-                "cpu": "64",
-                "memory": "130Gi"
+                "cpu": "0.5",
+                "memory": "0.5Gi"
               },
               "requests": {
-                "cpu": "64",
-                "memory": "130Gi"
+                "cpu": "0.5",
+                "memory": "0.5Gi"
               }
             },
             "terminationMessagePath": "/dev/termination-log",

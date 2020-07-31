@@ -47,16 +47,22 @@
             "name": "container-0",
             "resources": {
               "limits": {
-                "cpu": "64",
-                "memory": "130Gi"
+                "cpu": "0.5",
+                "memory": "0.5Gi"
               },
               "requests": {
-                "cpu": "64",
-                "memory": "130Gi"
+                "cpu": "0.5",
+                "memory": "0.5Gi"
               }
             },
             "terminationMessagePath": "/dev/termination-log",
-            "terminationMessagePolicy": "File"
+            "terminationMessagePolicy": "File",
+            "volumeMounts": [
+              {
+                "mountPath": "/tmp/evs0/kd4kqzfc",
+                "name": "cci-evs-kd4kcua0-fvgr"
+              }
+            ]
           }
         ],
         "imagePullSecrets": [
@@ -67,7 +73,15 @@
         "restartPolicy": "Always",
         "schedulerName": "default-scheduler",
         "securityContext": {},
-        "terminationGracePeriodSeconds": 30
+        "terminationGracePeriodSeconds": 30,
+        "volumes": [
+          {
+            "name": "cci-evs-kd4kcua0-fvgr",
+            "persistentVolumeClaim": {
+              "claimName": "EVS_PVC_NAME"
+            }
+          }
+        ]
       }
     }
   }

@@ -1,3 +1,4 @@
-FROM swr.cn-north-4.myhuaweicloud.com/perf-test/tensorflow:1.15.2-gpu
-ADD ping.py /
+# FROM registry.cn-hangzhou.aliyuncs.com/k_perf/perf-nginx:v8
+FROM swr.cn-north-4.myhuaweicloud.com/asm/fortio:latest
+ADD check-network.sh /
 

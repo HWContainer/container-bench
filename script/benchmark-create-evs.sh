@@ -5,16 +5,35 @@ POD_NUM=500
 BASE_NAME=sina-test
 NAMESPACE=sina-test
 TEMPLATE_FILE=pod.json
+PIPE_COUNT=20
 
 function createPvc(){
-    id=${1}
-    podName="${BASE_NAME}-${id}"
-    pod=${pod//EVS_PVC_NAME/${podName}}
-    curl -k -X POST -H "Content-Type:application/json" -H "X-Auth-Token:${token}" $endpoint/api/v1/namespaces/${NAMESPACE}/persistentvolumeclaims -d "${pod}" -s 2>&1 >> /tmp/curl-create-pvc.log
+   id=$1
+    #curl -k -X POST -H "Content-Type:application/json" -H "X-Auth-Token:${token}" $endpoint/api/v1/namespaces/${NAMESPACE}/persistentvolumeclaims -d "${pod}" -s 2>&1 >> /tmp/curl-create-pvc.log
+    kubectl apply -f /tmp/pvcpvc$id/ --recursive
+    rm -rf /tmp/pvcpvc${id}
+}
+
+function gen_pod(){
+    p_id=$1
+    f_id=$2
+    podName="${BASE_NAME}-${p_id}"
+    f_pod=${pod//EVS_PVC_NAME/${podName}}
+    f_pod=${f_pod//AZ/${az}}
+    mkdir -p /tmp/pvcpvc$f_id
+    echo $f_pod > /tmp/pvcpvc$f_id/${p_id}.json
 }
 
 function createPods(){
+    j=1
     for i in $(seq 1 ${DEPLOY_NUM});do
+        gen_pod $i $j
+        j=$(($j+1))
+        if [ $j -gt $PIPE_COUNT ] ; then
+            j=1
+        fi
+    done
+    for i in $(seq 1 $PIPE_COUNT);do
         createPvc ${i} &
     done
 }

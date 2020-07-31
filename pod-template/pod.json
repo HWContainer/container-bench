@@ -6,17 +6,12 @@
       "app":"POD_NAME"
     },
     "name":"POD_NAME",
-    "namespace":"cci-perf-97831661"
+    "namespace":"NAMESPACE"
   },
   "spec":{
     "containers":[
       {
-        "command":[
-          "/bin/bash",
-          "-c",
-          "sleep 7200"
-        ],
-        "image":"swr.cn-north-4.myhuaweicloud.com/perf-test/tensorflow:1.15.2-gpu",
+        "image":"POD_IMAGE",
         "imagePullPolicy":"Always",
         "name":"container-0",
         "resources":{
@@ -33,10 +28,9 @@
         "terminationMessagePolicy":"File"
       }
     ],
-    "dnsPolicy":"Default",
     "imagePullSecrets":[
       {
-        "name":"imagepull-secret"
+        "name":"default-secret"
       }
     ],
     "restartPolicy":"Always",

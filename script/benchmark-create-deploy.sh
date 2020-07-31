@@ -5,18 +5,41 @@ POD_NUM=500
 BASE_NAME=sina-test
 NAMESPACE=sina-test
 TEMPLATE_FILE=pod.json
+PIPE_COUNT=20
 
 function createDeploy(){
-    id=${1}
-    podName="${BASE_NAME}-${id}"
-    pod=${pod//POD_NAME/${podName}}
-    curl -k -X POST -H "Content-Type:application/json" -H "X-Auth-Token:${token}" $endpoint/apis/apps/v1/namespaces/${NAMESPACE}/deployments -d "${pod}" -s 2>&1 >> /tmp/curl-create-deploy.log
+    id=$1
+    kubectl apply -f /tmp/deploydeploy$id/ --recursive
+    rm -rf /tmp/deploydeploy${id}
+}
+function gen_pod(){
+    p_id=$1
+    f_id=$2
+    podName="${BASE_NAME}-${p_id}"
+    f_pod=${pod//POD_NAME/${podName}}
+    f_pod=${f_pod//EVS_PVC_NAME/${podName}}
+    mkdir -p /tmp/deploydeploy$f_id
+    echo $f_pod > /tmp/deploydeploy$f_id/${p_id}.json
 }
 
 function createPods(){
+    j=1
     for i in $(seq 1 ${DEPLOY_NUM});do
-        createDeploy ${i} &
+        gen_pod $i $j
+        j=$(($j+1))
+        if [ $j -gt $PIPE_COUNT ] ; then
+            j=1
+        fi
     done
+    if [[ $DEPLOY_NUM -gt $PIPE_COUNT ]]; then
+        for i in $(seq 1 $PIPE_COUNT);do
+            createDeploy ${i} &
+        done
+    else
+        for i in $(seq 1 $DEPLOY_NUM);do
+            createDeploy ${i} &
+        done
+    fi
 }
 
 function checkPodsCreate(){
@@ -37,10 +60,25 @@ function checkPodsScheduled(){
 
 function checkPodsRunning(){
     finishedPods=0
+    outarray=(1 2 4 8 16 32 64 128 256 512 1024 2048)
+    finalarray=(8 4 2 1 0)
     while [[ ${finishedPods} -ne ${TOTAL_POD_NUM} ]];do
+        if [[ -f /tmp/debug ]]; then
+            echo ${finishedPods} ${TOTAL_POD_NUM}
+        fi
+        first=${outarray[0]}
+        final=${finalarray[0]}
         finishedPods=`kubectl -n ${NAMESPACE} get pod | grep ${BASE_NAME}| grep -v "NAME" | grep  "Running" | wc -l`
+        if [[ $finishedPods -ge $first ]]; then
+             echo "First $first($finishedPods) Pod Running:            `date +%Y-%m-%d' '%H:%M:%S.%N`"
+             outarray=(${outarray[@]:1})
+        fi
+        if [[ $finishedPods -ge $(($TOTAL_POD_NUM-$final)) ]]; then
+             echo "Final $final($finishedPods) Pod Running:            `date +%Y-%m-%d' '%H:%M:%S.%N`"
+             finalarray=(${finalarray[@]:1})
+        fi
     done
-    echo "All pods Running:        `date +%Y-%m-%d' '%H:%M:%S.%N`"
+    echo "All pods Running:         `date +%Y-%m-%d' '%H:%M:%S.%N`"
 }
 
 function getPingServer(){
