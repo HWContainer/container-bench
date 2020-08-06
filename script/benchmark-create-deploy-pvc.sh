@@ -40,13 +40,33 @@ function checkPodsRunning(){
     finishedPods=0
     outarray=(1 2 4 8 16 32 64 128 256 512 1024 2048)
     finalarray=(8 4 2 1 0)
+    created=0
+    scheduled=0
     while [[ ${finishedPods} -ne ${TOTAL_POD_NUM} ]];do
         if [[ -f /tmp/debug ]]; then
             echo ${finishedPods} ${TOTAL_POD_NUM}
         fi
         first=${outarray[0]}
         final=${finalarray[0]}
-        finishedPods=`kubectl -n ${NAMESPACE} get pod | grep ${BASE_NAME}| grep -v "NAME" | grep  "Running" | wc -l`
+        ret=`kubectl -n ${NAMESPACE} get pod | grep ${BASE_NAME}| grep -v "NAME"`
+        
+        if [[ ${created} -eq 0 ]]; then
+             finishedPods=`echo "$ret" |grep ${BASE_NAME} | wc -l`
+             if [[ ${finishedPods} -eq ${TOTAL_POD_NUM} ]]; then
+                 created=1
+                 echo "All pods created:        `date +%Y-%m-%d' '%H:%M:%S.%N`"
+             fi
+        fi
+
+        if [[ ${scheduled} -eq 0 ]]; then
+             finishedPods=`echo "$ret" |grep ${BASE_NAME}|  grep -v "Pending"| wc -l`
+             if [[ ${finishedPods} -eq ${TOTAL_POD_NUM} ]]; then
+                 scheduled=1
+                 echo "All pods scheduled:       `date +%Y-%m-%d' '%H:%M:%S.%N`"
+             fi
+        fi
+
+        finishedPods=`echo "$ret" | grep ${BASE_NAME}| grep  "Running" | wc -l`
         if [[ $finishedPods -ge $first ]]; then
              echo "First $first($finishedPods) Pod Running:            `date +%Y-%m-%d' '%H:%M:%S.%N`"
              outarray=(${outarray[@]:1})
@@ -117,10 +137,9 @@ pod=${POD_TEMPLATE//NAMESPACE/${NAMESPACE}}
 pod=${pod//PINGSERVER/${PINGSERVER}}
 pod=${pod//POD_NUM/${POD_NUM}}
 pod=${pod//POD_IMAGE/${POD_IMAGE}}
+date +%Y-%m-%d' '%H:%M:%S.%N > /tmp/begin
 echo "Test start:              `date +%Y-%m-%d' '%H:%M:%S.%N`"
 createPods
 TOTAL_POD_NUM=$(( DEPLOY_NUM * POD_NUM ))
-checkPodsCreate
-checkPodsScheduled
 checkPodsRunning
 echo "Test finished:           `date +%Y-%m-%d' '%H:%M:%S.%N`"

@@ -34,19 +34,12 @@ clean2:
 
 clean: ## clean deploy pod and pvc
 	kubectl get deploy -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep 'perf-test'|xargs -i kubectl delete deploy -n $(namespace) --wait=true {}
-	kubectl get pods -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep 'perf-test'|xargs -i kubectl delete pod -n $(namespace) --ignore-not-found=true --wait=true {}
 	kubectl get pvc -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep 'perf-test'|xargs -i kubectl delete pvc -n $(namespace) --ignore-not-found=true --wait=true {}
+	kubectl get pods -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep 'perf-test'|xargs -i kubectl delete pod -n $(namespace) --ignore-not-found=true --wait=false {}
+	bash script/benchmark-wait-deploy-clean.sh --name perf-test --namespace $(namespace)
 
 count: ## count node for each pod
 	kubectl get pods -n $(namespace) -owide|awk '{print $$7}'|tr -s ' ' '\n'|sort |uniq -c|sort -r |awk '{print $$2, $$1}'
-
-1: ## create one pod
-	. $(current_dir)/script/get_token.sh; \
-	bash $(current_dir)/script/benchmark-create-pod.sh --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pod-template/pod-network.json --image $(swr)/$(image)
-
-1000: ## create 1000 pod
-	. $(current_dir)/script/get_token.sh; \
-	bash $(current_dir)/script/benchmark-create-pod.sh --pod-num 1000 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pod-template/pod-network.json --image $(swr)/$(image)
 
 deploy1: ## create one deploy with one pod
 	. $(current_dir)/script/get_token.sh; \
@@ -62,12 +55,17 @@ deploy1000: ## create one deploy with 1000 pod
 
 20deploy: ## create 20 deploy with pvc
 	. $(current_dir)/script/get_token.sh; \
-	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 20 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test-evs.json --image $(swr)/$(image)
+	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 2 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test-evs.json --image $(swr)/$(image)
 
 20evs: ## create 20 evs pvc
 	. $(current_dir)/script/get_token.sh; \
-	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 20 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/evs.json 
+	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 2 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/evs.json 
 
 20nfs: ## create 20 nfs pvc
 	. $(current_dir)/script/get_token.sh; \
 	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 20 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/nfs.json 
+
+events: ## create 20 nfs pvc
+	. $(current_dir)/script/get_token.sh; \
+	bash $(current_dir)/script/benchmark-get-event.sh  --namespace $(namespace)
+	python envparer.py
