@@ -28,6 +28,8 @@ with open('/tmp/curl-get-event.log', 'r') as f:
   # json_data=eval(strJson)
   json_data=json.loads(strJson)
 
+def mean(numbers):
+    return float(sum(numbers)) / max(len(numbers), 1)
 
 events = {}
 for j in json_data['items']:
@@ -37,11 +39,17 @@ for j in json_data['items']:
     if begin_tm > last_tm:
       continue
     events.setdefault(from_json('involvedObject.name', j), []).append(
-      {'delta': last_tm-begin_tm, 'lastTimestamp': from_json('lastTimestamp', j), 'reason': from_json('reason', j)})
+      {'delta': last_tm-begin_tm, 'lastTimestamp': from_json('lastTimestamp', j), 'reason': from_json('reason', j).decode('utf-8').encode('utf-8')})
 
+arr = []
 for k, e in events.items():
-  print(k)
-  for x in e:
-    print("  {}".format(x))
-print(len(events))
+  # print(k)
+  # print('|'.join(["{}|{}".format(x['reason'], x['delta']) for x in e]))
+  arr.append({x['reason']:x['delta'] for x in e})
+arr = [a for a in arr if 'Scheduled' in a ]
+print(len(arr))
+print("all scheduled=max([scheduled - begin])\nall running=max([Started - begin])\navg evs mount=avg[SuccessfulMountVolume-Scheduled]\n")
+print("all scheduled=", max([x['Scheduled'] for x in arr]))
+print("all running=", max([x['Started'] for x in arr]))
+print("avg evsmount=", mean([x['SuccessfulMountVolume'] - x['Scheduled'] for x in arr]))
 # print("\n".join(events.keys()))
