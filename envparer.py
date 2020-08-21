@@ -63,8 +63,12 @@ for j in pod_data['items']:
     #print(from_json('metadata.creationTimestamp', j))
     #print(from_json('status.conditions.*.lastTransitionTime', j))
     create_tm=time.mktime((datetime.datetime.strptime(from_json('metadata.creationTimestamp', j), "%Y-%m-%dT%H:%M:%SZ") + datetime.timedelta(hours=8)).timetuple())
+    #pods.setdefault(from_json('metadata.name', j), [{'delta': create_tm - begin_tm, 'reason': 'Created'}]).extend(
+    #  [{'delta': time.mktime((datetime.datetime.strptime(v, "%Y-%m-%dT%H:%M:%SZ") + datetime.timedelta(hours=8)).timetuple()) - begin_tm, 'reason':k.decode('utf-8').encode('utf-8')} for k, v in zip(from_json('status.conditions.*.type', j), from_json('status.conditions.*.lastTransitionTime', j))])
+    startedAt=min([time.mktime((datetime.datetime.strptime(s, "%Y-%m-%dT%H:%M:%SZ") + datetime.timedelta(hours=8)).timetuple()) - begin_tm for s in from_json_a('status.containerStatuses.*.state.terminated.startedAt', j)])
+    finishedAt=min([time.mktime((datetime.datetime.strptime(s, "%Y-%m-%dT%H:%M:%SZ") + datetime.timedelta(hours=8)).timetuple()) - begin_tm for s in from_json_a('status.containerStatuses.*.state.terminated.finishedAt', j)])
     pods.setdefault(from_json('metadata.name', j), [{'delta': create_tm - begin_tm, 'reason': 'Created'}]).extend(
-      [{'delta': time.mktime((datetime.datetime.strptime(v, "%Y-%m-%dT%H:%M:%SZ") + datetime.timedelta(hours=8)).timetuple()) - begin_tm, 'reason':k.decode('utf-8').encode('utf-8')} for k, v in zip(from_json('status.conditions.*.type', j), from_json('status.conditions.*.lastTransitionTime', j))])
+      [{'delta': startedAt, 'reason': 'startedAt'}, {'delta': finishedAt, 'reason': 'finishedAt'}])
 
 arr = []
 for k, e in events.items():
@@ -72,11 +76,12 @@ for k, e in events.items():
   print('|'.join(["{}|{}".format(x['reason'], x['delta']) for x in sorted(e+pods[k], key=lambda x: x['delta'])]))
   arr.append({x['reason']:x['delta'] for x in e+pods[k]})
 arr = [a for a in arr if 'Scheduled' in a ]
-print(len(arr))
-print("all scheduled=max([scheduled - begin])\nall running=max([Started - begin])\navg evs mount=avg[SuccessfulMountVolume-Scheduled]\n")
-print("all scheduled=", max([x['Scheduled'] for x in arr]))
-print("all waiting=", max([x['Started'] for x in arr]))
-print("avg evsmount=", mean([x['SuccessfulMountVolume'] - x['Scheduled'] for x in arr]))
-print("avg excuted=", ([x['Ready'] - x['Started'] for x in arr]))
+print("total pods = {}".format(len(arr)))
+print("created \tmin={},\t max={},\t avg={}".format(min([x['Created'] for x in arr]), max([x['Created'] for x in arr]), mean([x['Created'] for x in arr])))
+print("scheduled \tmin={},\t max={},\t avg={}".format(min([x['Scheduled'] for x in arr]), max([x['Scheduled'] for x in arr]), mean([x['Scheduled'] for x in arr])))
+print("evsmount off\tmin={},\t max={},\t avg={}".format(min([x['SuccessfulMountVolume'] - x['Scheduled'] for x in arr]), max([x['SuccessfulMountVolume'] - x['Scheduled'] for x in arr]), mean([x['SuccessfulMountVolume'] - x['Scheduled'] for x in arr])))
+print("startedAt \tmin={},\t max={},\t avg={}".format(min([x['startedAt'] for x in arr]), max([x['startedAt'] for x in arr]), mean([x['startedAt'] for x in arr])))
+print("running \tmin={},\t max={},\t avg={}".format(min([x['Started'] for x in arr]), max([x['Started'] for x in arr]), mean([x['Started'] for x in arr])))
+print("finishedAt \tmin={},\t max={},\t avg={}".format(min([x['finishedAt'] for x in arr]), max([x['finishedAt'] for x in arr]), mean([x['finishedAt'] for x in arr])))
+# print("excuted=", ([x['finishedAt'] - x['startedAt'] for x in arr]))
 # print("\n".join(events.keys()))
-
