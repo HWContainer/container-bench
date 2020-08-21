@@ -24,16 +24,13 @@ server: ## create a server for ping
 	. $(current_dir)/script/get_token.sh; \
 	bash $(current_dir)/script/benchmark-create-pod.sh --pod-num 1 --name perf-server --namespace $(namespace) --pod-template $(current_dir)/pod-template/pod.json --image $(swr)/$(serverimage)
 
-hostnetwork: ## create a server for ping
-	. $(current_dir)/script/get_token.sh; \
-	bash $(current_dir)/script/benchmark-create-pod.sh --pod-num 1 --name perf-hostnetwork --namespace $(namespace) --pod-template $(current_dir)/pod-template/pod-hostnetwork.json --image $(swr)/$(serverimage)
-        
 clean2:
 	kubectl get pods -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep 'perf-hostnetwork'|xargs -i kubectl delete pod -n $(namespace) --ignore-not-found=true --wait=true {}
 	kubectl get svc -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep 'perf-test'|xargs -i kubectl delete svc -n $(namespace) --ignore-not-found=true --wait=true {}
 
 clean: ## clean deploy pod and pvc
 	kubectl get deploy -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep 'perf-test'|xargs -i kubectl delete deploy -n $(namespace) --wait=true {}
+	kubectl get vkjob -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep 'perf-test'|xargs -i kubectl delete vkjob -n $(namespace) --wait=true {}
 	kubectl get pvc -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep 'perf-test'|xargs -i kubectl delete pvc -n $(namespace) --ignore-not-found=true --wait=true {}
 	kubectl get pods -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep 'perf-test'|xargs -i kubectl delete pod -n $(namespace) --ignore-not-found=true --wait=false {}
 	bash script/benchmark-wait-deploy-clean.sh --name perf-test --namespace $(namespace)
@@ -41,31 +38,17 @@ clean: ## clean deploy pod and pvc
 count: ## count node for each pod
 	kubectl get pods -n $(namespace) -owide|awk '{print $$7}'|tr -s ' ' '\n'|sort |uniq -c|sort -r |awk '{print $$2, $$1}'
 
-deploy1: ## create one deploy with one pod
-	. $(current_dir)/script/get_token.sh; \
-	bash $(current_dir)/script/benchmark-create-deploy.sh --deploy-num 1 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test.json --image $(swr)/$(image)
+vol_job: ## create one volcanojob with one task get time cost
+	bash $(current_dir)/script/benchmark-create-volcano.sh --deploy-num 1 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/volcano-template/one_task_atleast_1_resource.json --image $(swr)/$(image)
 
-deploy20: ## create one deploy with one pod
-	. $(current_dir)/script/get_token.sh;\
-	bash $(current_dir)/script/benchmark-create-deploy.sh --deploy-num 1 --pod-num 20 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test.json --image $(swr)/$(image)
+vol_job_1_in_n: ## create one volcanojob at least 1 pod resource with n task get time of scheduled to created
+	bash $(current_dir)/script/benchmark-create-volcano.sh --deploy-num 1 --pod-num $(n) --name perf-test --namespace $(namespace) --pod-template $(current_dir)/volcano-template/five_task_atleast_1_resource.json --image $(swr)/$(image)
 
-deploy1000: ## create one deploy with 1000 pod
-	. $(current_dir)/script/get_token.sh; \
-	bash $(current_dir)/script/benchmark-create-deploy.sh --deploy-num 1 --pod-num 1000 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test.json --image $(swr)/$(image)
+vol_job_3_in_5: ## create n volcanojob at least 3 pod resource with 5 task get time of scheduled to created
+	bash $(current_dir)/script/benchmark-create-volcano.sh --deploy-num $(n) --pod-num 5 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/volcano-template/five_task_atleast_3_resource.json --image $(swr)/$(image)
 
-20deploy: ## create 20 deploy with pvc
-	. $(current_dir)/script/get_token.sh; \
-	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 2 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test-evs.json --image $(swr)/$(image)
+vol_job_5_in_5: ## create n volcanojob at least 5 pod resource with 5 task get time of scheduled to created
+	bash $(current_dir)/script/benchmark-create-volcano.sh --deploy-num $(n) --pod-num 5 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/volcano-template/five_task_atleast_5_resource.json --image $(swr)/$(image)
 
-20evs: ## create 20 evs pvc
-	. $(current_dir)/script/get_token.sh; \
-	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 2 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/evs.json 
-
-20nfs: ## create 20 nfs pvc
-	. $(current_dir)/script/get_token.sh; \
-	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 20 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/nfs.json 
-
-events: ## create 20 nfs pvc
-	. $(current_dir)/script/get_token.sh; \
-	bash $(current_dir)/script/benchmark-get-event.sh  --namespace $(namespace)
+events: ## get events
 	python envparer.py

@@ -11,22 +11,17 @@
   "spec":{
     "containers":[
       {
-        "command":[
-          "/bin/bash",
-          "-c",
-          "sleep 7200"
-        ],
         "image":"POD_IMAGE",
         "imagePullPolicy":"Always",
         "name":"container-0",
         "resources":{
           "limits":{
-            "cpu":"16",
-            "memory":"32Gi"
+            "cpu":"0.2",
+            "memory":"0.2Gi"
           },
           "requests":{
-            "cpu":"16",
-            "memory":"32Gi"
+            "cpu":"0.2",
+            "memory":"0.2Gi"
           }
         },
         "terminationMessagePath":"/dev/termination-log",
@@ -36,7 +31,7 @@
     "dnsPolicy":"Default",
     "imagePullSecrets":[
       {
-        "name":"imagepull-secret"
+        "name":"default-secret"
       }
     ],
     "restartPolicy":"Always",

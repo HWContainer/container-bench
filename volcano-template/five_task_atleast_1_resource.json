@@ -1,0 +1,58 @@
+{
+  "apiVersion": "batch.volcano.sh/v1alpha1",
+  "kind": "Job",
+  "metadata": {
+    "name": "POD_NAME",
+    "namespace": "NAMESPACE"
+  },
+  "spec": {
+    "minAvailable": 1,
+    "schedulerName": "volcano",
+    "policies": [
+      {
+        "event": "PodEvicted",
+        "action": "RestartJob"
+      }
+    ],
+    "plugins": {
+      "ssh": [],
+      "env": [],
+      "svc": []
+    },
+    "maxRetry": 5,
+    "queue": "default",
+    "tasks": [
+      {
+        "replicas": POD_NUM,
+        "name": "mork",
+        "template": {
+          "metadata": {
+            "name": "mork"
+          },
+          "spec": {
+            "schedulerName": "volcano",
+            "containers": [
+              {
+                "image": "POD_IMAGE",
+                "imagePullPolicy": "IfNotPresent",
+                "command": [
+                  "sh",
+                  "-c",
+                  "sleep 30"
+                ],
+                "name": "sleeptask",
+                "resources": {
+                  "requests": {
+                    "cpu": "300m"
+                  }
+                }
+              }
+            ],
+            "restartPolicy": "OnFailure"
+          }
+        }
+      }
+    ]
+  }
+}
+
