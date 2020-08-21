@@ -104,8 +104,8 @@ function getPingServer(){
 }
 
 function getCostEach(){
-    kubectl get events -n ${NAMESPACE} > /tmp/curl-get-event.log
-    kubectl get pods -n ${NAMESPACE} > /tmp/curl-get-event.log
+    kubectl get events -ojson -n ${NAMESPACE} > /tmp/curl-get-event.log
+    kubectl get pods -ojson -n ${NAMESPACE} > /tmp/curl-get-event.log
 }
 
 SCRIPT=$(basename $0)
