@@ -1,7 +1,13 @@
-swr=swr.cn-north-4.myhuaweicloud.com/cci-perf
-image=tensorflow:1.15.2-gpu-netcheck
-serverimage=perf-nginx:v9
-namespace=
+swr=swr.cn-south-1.myhuaweicloud.com/container_perf
+baseimage=perf-nginx:v10
+image=perf-nginx:v10-test
+serverimage=perf-nginx:10
+fortioimage=fortio
+processimage=process-exporter-0602-1
+#processimage=process-exporter:0.7.2
+grafanamage=grafana:7.1.4
+prometheusimage=prometheus
+namespace=default
 endpoint=https://cci.cn-north-4.myhuaweicloud.com
 iam=https://iam.cn-north-4.myhuaweicloud.com
 domain=

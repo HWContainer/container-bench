@@ -46,13 +46,8 @@
             },
             "name": "container-0",
             "resources": {
-              "limits": {
-                "cpu": "64",
-                "memory": "130Gi"
-              },
               "requests": {
-                "cpu": "64",
-                "memory": "130Gi"
+                "cpu": "15"
               }
             },
             "terminationMessagePath": "/dev/termination-log",

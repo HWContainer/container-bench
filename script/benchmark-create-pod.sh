@@ -45,6 +45,11 @@ function checkPodsRunning(){
     echo "All pods Running:        `date +%Y-%m-%d' '%H:%M:%S.%N`"
 }
 
+function getCostEach(){
+    kubectl get events -ojson -n ${NAMESPACE} > /tmp/curl-get-event.log
+    kubectl get pods -ojson -n ${NAMESPACE} > /tmp/curl-get-pods.log
+}
+
 SCRIPT=$(basename $0)
 while test $# -gt 0; do
     case $1 in
@@ -88,9 +93,11 @@ while test $# -gt 0; do
         esac
 done
 POD_TEMPLATE=`cat ${TEMPLATE_FILE} | sed "s/^[ \t]*//g"| sed ":a;N;s/\n//g;ta"`
+date +%Y-%m-%d' '%H:%M:%S > /tmp/begin
 echo "Test start:              `date +%Y-%m-%d' '%H:%M:%S.%N`"
 createPods
 checkPodsCreate
 checkPodsScheduled
 checkPodsRunning
 echo "Test finished:           `date +%Y-%m-%d' '%H:%M:%S.%N`"
+getCostEach

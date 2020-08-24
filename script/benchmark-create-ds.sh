@@ -9,8 +9,8 @@ PIPE_COUNT=20
 
 function createDeploy(){
     id=$1
-    kubectl apply -f /tmp/deploydeploy$id/ --recursive
-    rm -rf /tmp/deploydeploy${id}
+    kubectl apply -f /tmp/dsds$id/ --recursive
+    rm -rf /tmp/dsds${id}
 }
 function gen_pod(){
     p_id=$1
@@ -18,11 +18,11 @@ function gen_pod(){
     podName="${BASE_NAME}-${p_id}"
     f_pod=${pod//POD_NAME/${podName}}
     f_pod=${f_pod//EVS_PVC_NAME/${podName}}
-    mkdir -p /tmp/deploydeploy$f_id
-    echo $f_pod > /tmp/deploydeploy$f_id/${p_id}.json
+    mkdir -p /tmp/dsds$f_id
+    echo $f_pod > /tmp/dsds$f_id/${p_id}.json
 }
 
-function createPods(){
+function genPods(){
     j=1
     for i in $(seq 1 ${DEPLOY_NUM});do
         gen_pod $i $j
@@ -31,6 +31,10 @@ function createPods(){
             j=1
         fi
     done
+}
+
+
+function createPods(){
     if [[ $DEPLOY_NUM -gt $PIPE_COUNT ]]; then
         for i in $(seq 1 $PIPE_COUNT);do
             createDeploy ${i} &
@@ -42,43 +46,65 @@ function createPods(){
     fi
 }
 
-function checkPodsCreate(){
-    finishedPods=0
-    while [[ ${finishedPods} -ne ${TOTAL_POD_NUM} ]];do
-        finishedPods=`kubectl -n ${NAMESPACE} get pod | grep ${BASE_NAME}| grep -v "NAME"| wc -l`
-    done
-    echo "All pods created:        `date +%Y-%m-%d' '%H:%M:%S.%N`"
-}
-
-function checkPodsScheduled(){
-    finishedPods=0
-    while [[ ${finishedPods} -ne ${TOTAL_POD_NUM} ]];do
-        finishedPods=`kubectl -n ${NAMESPACE} get pod | grep ${BASE_NAME}| grep -v "NAME" | grep -v "Pending" | wc -l`
-    done
-    echo "All pods scheduled:      `date +%Y-%m-%d' '%H:%M:%S.%N`"
-}
-
 function checkPodsRunning(){
     finishedPods=0
     outarray=(1 2 4 8 16 32 64 128 256 512 1024 2048)
     finalarray=(8 4 2 1 0)
+    final=${finalarray[0]}
+    while [[ $final -ge $TOTAL_POD_NUM ]]; do
+        finalarray=(${finalarray[@]:1})
+        final=${finalarray[0]}
+    done
+    created=0
+    scheduled=0
+    running=0
     while [[ ${finishedPods} -ne ${TOTAL_POD_NUM} ]];do
         if [[ -f /tmp/debug ]]; then
             echo ${finishedPods} ${TOTAL_POD_NUM}
         fi
         first=${outarray[0]}
         final=${finalarray[0]}
-        finishedPods=`kubectl -n ${NAMESPACE} get pod | grep ${BASE_NAME}| grep -v "NAME" | grep  "Running" | wc -l`
-        if [[ $finishedPods -ge $first ]]; then
-             echo "First $first($finishedPods) Pod Running:            `date +%Y-%m-%d' '%H:%M:%S.%N`"
-             outarray=(${outarray[@]:1})
+        ret=`kubectl -n ${NAMESPACE} get pod | grep ${BASE_NAME}| grep -v "NAME"`
+        
+        if [[ ${created} -eq 0 ]]; then
+             finishedPods=`echo "$ret" |grep ${BASE_NAME} | wc -l`
+             if [[ ${finishedPods} -eq ${TOTAL_POD_NUM} ]]; then
+                 created=1
+                 echo "All pods created:        `date +%Y-%m-%d' '%H:%M:%S.%N`"
+             fi
         fi
-        if [[ $finishedPods -ge $(($TOTAL_POD_NUM-$final)) ]]; then
-             echo "Final $final($finishedPods) Pod Running:            `date +%Y-%m-%d' '%H:%M:%S.%N`"
-             finalarray=(${finalarray[@]:1})
+
+        if [[ ${scheduled} -eq 0 ]]; then
+             finishedPods=`echo "$ret" |grep ${BASE_NAME}|  grep -v "Pending"| wc -l`
+             if [[ ${finishedPods} -eq ${TOTAL_POD_NUM} ]]; then
+                 scheduled=1
+                 echo "All pods scheduled:       `date +%Y-%m-%d' '%H:%M:%S.%N`"
+             fi
+        fi
+
+        
+        if [[ ${running} -eq 0 ]]; then
+             finishedPods=`echo "$ret" | grep ${BASE_NAME}| grep -e "Running" -e "Completed"| wc -l`
+             if [[ $finishedPods -ge $first ]]; then
+                 echo "First $first($finishedPods) Pod Running:            `date +%Y-%m-%d' '%H:%M:%S.%N`"
+                 outarray=(${outarray[@]:1})
+             fi
+             if [[ $finishedPods -ge $(($TOTAL_POD_NUM-$final)) ]]; then
+                 echo "Final $final($finishedPods) Pod Running:            `date +%Y-%m-%d' '%H:%M:%S.%N`"
+                 finalarray=(${finalarray[@]:1})
+             fi
+             if [[ ${finishedPods} -eq ${TOTAL_POD_NUM} ]]; then
+                 running=1
+                 echo "All pods Running:       `date +%Y-%m-%d' '%H:%M:%S.%N`"
+             fi
         fi
     done
-    echo "All pods Running:         `date +%Y-%m-%d' '%H:%M:%S.%N`"
+    echo "All pods Completed:        `date +%Y-%m-%d' '%H:%M:%S.%N`"
+}
+
+function getCostEach(){
+    kubectl get events -ojson -n ${NAMESPACE} > /tmp/curl-get-event.log
+    kubectl get pods -ojson -n ${NAMESPACE} > /tmp/curl-get-pods.log
 }
 
 function getPingServer(){
@@ -139,10 +165,11 @@ pod=${POD_TEMPLATE//NAMESPACE/${NAMESPACE}}
 pod=${pod//PINGSERVER/${PINGSERVER}}
 pod=${pod//POD_NUM/${POD_NUM}}
 pod=${pod//POD_IMAGE/${POD_IMAGE}}
+genPods
+#date +%Y-%m-%d' '%H:%M:%S > /tmp/begin
 echo "Test start:              `date +%Y-%m-%d' '%H:%M:%S.%N`"
 createPods
 TOTAL_POD_NUM=$(( DEPLOY_NUM * POD_NUM ))
-checkPodsCreate
-checkPodsScheduled
-checkPodsRunning
+#checkPodsRunning
 echo "Test finished:           `date +%Y-%m-%d' '%H:%M:%S.%N`"
+#getCostEach

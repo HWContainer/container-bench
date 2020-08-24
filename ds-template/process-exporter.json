@@ -1,0 +1,92 @@
+{
+    "kind": "DaemonSet",
+    "apiVersion": "apps/v1",
+    "metadata": {
+        "name": "POD_NAME",
+        "namespace": "NAMESPACE",
+        "labels": {
+            "app": "POD_NAME"
+        }
+    },
+    "spec": {
+        "selector": {
+            "matchLabels": {
+                "app": "POD_NAME"
+            }
+        },
+        "template": {
+            "metadata": {
+                "labels": {
+                    "app": "POD_NAME"
+                },
+                "annotations": {
+                    "prometheus.io/port": "9256",
+                    "prometheus.io/scrape": "true"
+                }
+            },
+            "spec": {
+                "volumes": [
+                    {
+                        "name": "proc",
+                        "hostPath": {
+                            "path": "/proc",
+                            "type": ""
+                        }
+                    }
+                ],
+                "containers": [
+                    {
+                        "name": "POD_NAME",
+                        "image": "POD_IMAGE",
+                        "args": [
+                            "--path.procfs=/host/proc",
+                            "--web.listen-address=0.0.0.0:9256"
+                        ],
+                        "resources": {
+                            "limits": {
+                                "cpu": "200m",
+                                "memory": "200Mi"
+                            },
+                            "requests": {
+                                "cpu": "100m",
+                                "memory": "128Mi"
+                            }
+                        },
+                        "volumeMounts": [
+                            {
+                                "name": "proc",
+                                "readOnly": true,
+                                "mountPath": "/host/proc"
+                            }
+                        ],
+                        "imagePullPolicy": "IfNotPresent"
+                    }
+                ],
+                "restartPolicy": "Always",
+                "terminationGracePeriodSeconds": 30,
+                "dnsPolicy": "ClusterFirst",
+                "hostNetwork": true,
+                "hostPID": true,
+                "securityContext": {},
+                "imagePullSecrets": [
+                    {
+                        "name": "default-secret"
+                    }
+                ],
+                "schedulerName": "default-scheduler",
+                "tolerations": [
+                    {
+                        "operator": "Exists"
+                    }
+                ]
+            }
+        },
+        "updateStrategy": {
+            "type": "RollingUpdate",
+            "rollingUpdate": {
+                "maxUnavailable": 1
+            }
+        },
+        "revisionHistoryLimit": 10
+    }
+}
