@@ -25,7 +25,7 @@ def from_json_a(k, j):
         # if the key may different, skip it
         for jk in j.keys():
           try:
-            print(keys[i+1:], j[jk])
+            # print(keys[i+1:], j[jk])
             j = from_json_a(".".join(keys[i+1:]), j[jk])
             return j
           except Exception as e:
@@ -63,13 +63,14 @@ def mean(numbers):
 events = {}
 for j in json_data['items']:
   if base_name in from_json('metadata.name', j) and from_json('involvedObject.kind', j) not in ['ReplicaSet', 'PodGroup', 'Deployment']: # and 'perf-test-10-mork-1' in from_json('metadata.name', j):
-    last_tm=time.mktime((datetime.datetime.strptime(from_json('lastTimestamp', j), "%Y-%m-%dT%H:%M:%SZ") + datetime.timedelta(hours=8)).timetuple())
+    #scheduled not record print(from_json('lastTimestamp', j))
+    last_tm=time.mktime((datetime.datetime.strptime(from_json('metadata.creationTimestamp', j), "%Y-%m-%dT%H:%M:%SZ") + datetime.timedelta(hours=8)).timetuple())
     #print(datetime.datetime.fromtimestamp(begin_tm), datetime.datetime.fromtimestamp(last_tm))
     if begin_tm > last_tm:
       continue
     #print(from_json('reason', j).decode('utf-8').encode('utf-8'), from_json('lastTimestamp', j))
     events.setdefault(from_json('involvedObject.name', j), []).append(
-      {'delta': last_tm-begin_tm, 'lastTimestamp': from_json('lastTimestamp', j), 'reason': from_json('reason', j).decode('utf-8').encode('utf-8')})
+      {'delta': last_tm-begin_tm, 'lastTimestamp': from_json('metadata.creationTimestamp', j), 'reason': from_json('reason', j).decode('utf-8').encode('utf-8')})
 
 pods = {}
 for j in pod_data['items']:
@@ -98,9 +99,9 @@ print("created \tmin={},\t max={},\t avg={}".format(min([x['Created'] for x in a
 print("scheduled \tmin={},\t max={},\t avg={}".format(min([x['Scheduled'] for x in arr]), max([x['Scheduled'] for x in arr]), mean([x['Scheduled'] for x in arr])))
 print("pulling \tmin={},\t max={},\t avg={}".format(min([x['Pulling'] for x in arr]), max([x['Pulling'] for x in arr]), mean([x['Pulling'] for x in arr])))
 print("pulled  \tmin={},\t max={},\t avg={}".format(min([x['Pulled'] for x in arr]), max([x['Pulled'] for x in arr]), mean([x['Pulled'] for x in arr])))
-print("pull f ing \tmin={},\t max={},\t avg={}".format(min([x['Pulled'] - x['Pulling'] for x in arr]), max([x['Pulled'] - x['Pulling'] for x in arr]), mean([x['Pulled'] - x['Pulling'] for x in arr])))
-print("evsmount f sch \tmin={},\t max={},\t avg={}".format(min([x['SuccessfulMountVolume'] - x['Scheduled'] for x in arr]), max([x['SuccessfulMountVolume'] - x['Scheduled'] for x in arr]), mean([x['SuccessfulMountVolume'] - x['Scheduled'] for x in arr])))
-print("started f sch \tmin={},\t max={},\t avg={}".format(min([x['startedAt']-x['Scheduled'] for x in arr]), max([x['startedAt'] - x['Scheduled']for x in arr]), mean([x['startedAt']-x['Scheduled'] for x in arr])))
+print("pull takes \tmin={},\t max={},\t avg={}".format(min([x['Pulled'] - x['Pulling'] for x in arr]), max([x['Pulled'] - x['Pulling'] for x in arr]), mean([x['Pulled'] - x['Pulling'] for x in arr])))
+print("mount takes \tmin={},\t max={},\t avg={}".format(min([x['SuccessfulMountVolume'] - x['Scheduled'] for x in arr]), max([x['SuccessfulMountVolume'] - x['Scheduled'] for x in arr]), mean([x['SuccessfulMountVolume'] - x['Scheduled'] for x in arr])))
+print("start takes \tmin={},\t max={},\t avg={}".format(min([x['startedAt']-x['Scheduled'] for x in arr]), max([x['startedAt'] - x['Scheduled']for x in arr]), mean([x['startedAt']-x['Scheduled'] for x in arr])))
 print("startedAt \tmin={},\t max={},\t avg={}".format(min([x['startedAt'] for x in arr]), max([x['startedAt'] for x in arr]), mean([x['startedAt'] for x in arr])))
 print("running \tmin={},\t max={},\t avg={}".format(min([x['Started'] for x in arr]), max([x['Started'] for x in arr]), mean([x['Started'] for x in arr])))
 print("finishedAt \tmin={},\t max={},\t avg={}".format(min([x['finishedAt'] for x in arr]), max([x['finishedAt'] for x in arr]), mean([x['finishedAt'] for x in arr])))
