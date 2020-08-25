@@ -1,0 +1,2 @@
+FROM swr.cn-north-4.myhuaweicloud.com/asm/fortio:latest
+ADD check-network.sh /

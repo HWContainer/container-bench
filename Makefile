@@ -22,6 +22,11 @@ image: ## build image
 	docker push $(swr)/$(image)
 	docker rmi $(swr)/$(image)
 
+fortio_image: ## build image
+	docker build -f $(current_dir)/dockerfiles/Dockerfile.fortio -t $(swr)/$(fortioimage) $(current_dir)/script
+	docker push $(swr)/$(fortioimage)
+	docker rmi $(swr)/$(fortioimage)
+
 moreimage: ## build image special l layer and c size
 	dd if=/dev/urandom of=sample bs=1M count=$(c)
 	bash $(current_dir)/script/create_image.sh $(l) $(swr)/$(baseimage) $(swr)/$(image)
@@ -37,7 +42,7 @@ metrics: ## create a grafana and process-exporter
 	bash $(current_dir)/script/benchmark-create-ds.sh --pod-num 1 --name process-exporter --namespace $(namespace) --pod-template $(current_dir)/ds-template/process-exporter.json --image $(swr)/$(processimage)
 
 fortio: ## create fortio as client
-	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1 --name fortio --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test.json --image $(swr)/$(fortioimage)
+	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1 --name fortio --namespace $(namespace) --pod-template $(current_dir)/deploy-template/fortio.json --image $(swr)/$(fortioimage)
 
 clean2:
 	kubectl get pods -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep 'perf-hostnetwork'|xargs -i kubectl delete pod -n $(namespace) --ignore-not-found=true --wait=true {}
@@ -116,3 +121,7 @@ eni100: ## create one deploy with 20 pod
 
 2000svc: ## create 2000 svc
 	bash $(current_dir)/script/benchmark-create-svc.sh --deploy-num 2000 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/svc-template/svc.json 
+
+
+test: ## test svc
+	bash $(current_dir)/script/run_svc_fortio.sh $(namespace) http://$(url) 2>logs/$(url).log

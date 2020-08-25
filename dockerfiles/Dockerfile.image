@@ -1,0 +1,9 @@
+#FROM swr.cn-north-4.myhuaweicloud.com/perf-1/perf-nginx:v9
+FROM swr.cn-north-4.myhuaweicloud.com/asm/fortio:latest
+#ADD check-network.sh /
+#ADD get_pps.sh /home/paas
+#RUN chmod +x /home/paas/get_pps.sh
+#FROM ncabatoff/process-exporter:0.7.2
+#FROM grafana/grafana:7.1.4
+#FROM swr.cn-north-4.myhuaweicloud.com/perf-1/prometheus:latest
+#FROM swr.cn-north-4.myhuaweicloud.com/perf-1/process-exporter-0602-1

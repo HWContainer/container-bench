@@ -33,17 +33,6 @@
           {
             "image": "POD_IMAGE",
             "imagePullPolicy": "IfNotPresent",
-            "lifecycle": {
-              "postStart": {
-                "exec": {
-                  "command": [
-                    "/bin/bash",
-                    "check-network.sh",
-                    "PINGSERVER"
-                  ]
-                }
-              }
-            },
             "name": "container-0",
             "resources": {
               "requests": {
