@@ -22,10 +22,22 @@ image: ## build image
 	docker push $(swr)/$(image)
 	docker rmi $(swr)/$(image)
 
-fortio_image: ## build image
+base_image: ## build image
 	docker build -f $(current_dir)/dockerfiles/Dockerfile.fortio -t $(swr)/$(fortioimage) $(current_dir)/script
 	docker push $(swr)/$(fortioimage)
 	docker rmi $(swr)/$(fortioimage)
+	docker build -f $(current_dir)/dockerfiles/Dockerfile.perf-nginx -t $(swr)/$(baseimage) $(current_dir)/script
+	docker push $(swr)/$(baseimage)
+	docker rmi $(swr)/$(baseimage)
+	docker build -f $(current_dir)/dockerfiles/Dockerfile.prometheus -t $(swr)/$(prometheusimage) $(current_dir)/script
+	docker push $(swr)/$(prometheusimage)
+	docker rmi $(swr)/$(prometheusimage)
+	docker build -f $(current_dir)/dockerfiles/Dockerfile.grafana -t $(swr)/$(grafanaimage) $(current_dir)/script
+	docker push $(swr)/$(grafanaimage)
+	docker rmi $(swr)/$(grafanaimage)
+	docker build -f $(current_dir)/dockerfiles/Dockerfile.process -t $(swr)/$(processimage) $(current_dir)/script
+	docker push $(swr)/$(processimage)
+	docker rmi $(swr)/$(processimage)
 
 moreimage: ## build image special l layer and c size
 	dd if=/dev/urandom of=sample bs=1M count=$(c)

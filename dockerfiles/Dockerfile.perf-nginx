@@ -1,0 +1,3 @@
+FROM swr.cn-north-4.myhuaweicloud.com/perf-1/perf-nginx:v9
+ADD get_pps.sh /home/paas
+RUN chmod +x /home/paas/get_pps.sh

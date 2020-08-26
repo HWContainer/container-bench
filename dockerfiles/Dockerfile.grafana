@@ -1,0 +1,1 @@
+FROM swr.cn-north-4.myhuaweicloud.com/perf-1/grafana:7.1.4
