@@ -1,8 +1,6 @@
 import os
 import re
 import sys
-
-
 def parser_fortio_logs(file):
     case_list = []
     case = []
@@ -74,6 +72,11 @@ def parser_fortio_logs(file):
     for c in case_list:
         print(c[0], c[1:])
     
-for f in os.listdir('logs'):
-    print(f)
-    parser_fortio_logs(os.path.join("logs", f))
+base_name='perf-test'
+if len(sys.argv) > 1:
+    base_name=sys.argv[1]
+    parser_fortio_logs(os.path.join("logs", base_name))
+else:
+    for f in os.listdir('logs'):
+        print(f)
+        parser_fortio_logs(os.path.join("logs", f))
