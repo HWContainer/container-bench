@@ -61,9 +61,11 @@ clean2:
 	kubectl get svc -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep 'perf-test'|xargs -i kubectl delete svc -n $(namespace) --ignore-not-found=true --wait=true {}
 
 clean: ## clean deploy pod and pvc
+	echo "Clean start:              `date +%Y-%m-%d' '%H:%M:%S.%N`"
 	kubectl get deploy -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep 'perf-test'|xargs -i kubectl delete deploy -n $(namespace) --wait=true {}
 	kubectl get pods -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep 'perf-test'|xargs -i kubectl delete pod -n $(namespace) --ignore-not-found=true --wait=true {}
 	kubectl get pvc -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep 'perf-test'|xargs -i kubectl delete pvc -n $(namespace) --ignore-not-found=true --wait=true {}
+	echo "Clean end:                `date +%Y-%m-%d' '%H:%M:%S.%N`"
 
 count: ## count node for each pod
 	kubectl get pods -n $(namespace) -owide|awk '{print $$7}'|tr -s ' ' '\n'|sort |uniq -c|sort -r |awk '{print $$2, $$1}'
@@ -87,6 +89,9 @@ deploy1000: ## create one deploy with 1000 pod
 
 deploy2: ## create Two deploy with one pod
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 2 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test.json --image $(swr)/$(image)
+
+eni: ## create one deploy with 20 pod
+	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test_eni.json --image $(swr)/$(image)
 
 eni20: ## create one deploy with 20 pod
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 20 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test_eni.json --image $(swr)/$(image)
@@ -134,6 +139,7 @@ eni100: ## create one deploy with 20 pod
 2000svc: ## create 2000 svc
 	bash $(current_dir)/script/benchmark-create-svc.sh --deploy-num 2000 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/svc-template/svc.json 
 
-
+event: ## get events and pods
+	kubectl get events -ojson -n $(namespace) > /tmp/curl-get-event.log
 test: ## test svc
 	bash $(current_dir)/script/run_svc_fortio.sh $(namespace) http://$(url) 2>logs/$(url).log

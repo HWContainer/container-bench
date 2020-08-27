@@ -165,9 +165,11 @@ pod=${pod//POD_NUM/${POD_NUM}}
 pod=${pod//POD_IMAGE/${POD_IMAGE}}
 genPods
 date +%Y-%m-%d' '%H:%M:%S > /tmp/begin
+sleep 1
 echo "Test start:              `date +%Y-%m-%d' '%H:%M:%S.%N`"
 createPods
 TOTAL_POD_NUM=$(( DEPLOY_NUM * POD_NUM ))
 checkPodsRunning
 echo "Test finished:           `date +%Y-%m-%d' '%H:%M:%S.%N`"
+sleep 5
 getCostEach

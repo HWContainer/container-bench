@@ -31,18 +31,26 @@
       "spec": {
         "containers": [
           {
-            "image": "POD_IMAGE",
-            "imagePullPolicy": "IfNotPresent",
-            "lifecycle": {
-              "postStart": {
-                "exec": {
-                  "command": [
-                    "/bin/bash",
-                    "check-network.sh",
-                    "PINGSERVER"
-                  ]
+            "command": ["sh", "-c", "/bin/bash check-network.sh PINGSERVER; nginx -g 'daemon off;'"],
+            "env": [
+              {
+                "name": "MY_POD_NAME",
+                "valueFrom": {
+                  "fieldRef": {
+                    "fieldPath": "metadata.name"
+                  }
                 }
               }
+            ],
+            "image": "POD_IMAGE",
+            "imagePullPolicy": "Always",
+            "readinessProbe": {
+              "httpGet": {
+                "path": "/",
+                "port": 80
+              },
+              "initialDelaySeconds": 1,
+              "periodSeconds": 1
             },
             "name": "container-0",
             "resources": {
