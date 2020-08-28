@@ -34,7 +34,7 @@
             "command": ["sh", "-c", "/bin/bash check-network.sh PINGSERVER; nginx -g 'daemon off;'"],
             "env": [
               {
-                "name": "MY_POD_NAME",
+                "name": "MYPODNAME",
                 "valueFrom": {
                   "fieldRef": {
                     "fieldPath": "metadata.name"
@@ -43,7 +43,7 @@
               }
             ],
             "image": "POD_IMAGE",
-            "imagePullPolicy": "IfNotPresent",
+            "imagePullPolicy": "Always",
             "readinessProbe": {
               "httpGet": {
                 "path": "/",
@@ -54,13 +54,9 @@
             },
             "name": "container-0",
             "resources": {
-              "limits": {
-                "cpu": "0.5",
-                "memory": "0.5Gi"
-              },
               "requests": {
-                "cpu": "0.5",
-                "memory": "0.5Gi"
+                "cpu": "0.1",
+                "memory": "0.1Gi"
               }
             },
             "terminationMessagePath": "/dev/termination-log",

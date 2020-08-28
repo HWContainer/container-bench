@@ -1,6 +1,7 @@
 import json
 import time
 import datetime
+import re
 import sys
 base_name='perf-test'
 if len(sys.argv) > 1:
@@ -57,20 +58,29 @@ with open('/tmp/curl-get-pods.log', 'r') as f:
   strJson = "".join([ string.strip().rsplit("}" , 1)[0] ,  "}"] )  
   pod_data=json.loads(strJson)
 
+logs={}
+with open('/tmp/curl-get-realstart.log', 'r') as f:
+  for l in f:
+    runtothrough=re.findall("^[^\s]+\s+[^\s]+\s+([^\s]+\s+[^\s]+)\s+Check ([^\s]+).*success take: (\d+\.\d+)", l)
+    if runtothrough:
+      last_tm=time.mktime((datetime.datetime.strptime(runtothrough[0][0], "%Y-%m-%d %H:%M:%S")+datetime.timedelta(hours=8)).timetuple())
+      logs[runtothrough[0][1]] = [{'delta': last_tm-begin_tm, 'reason': "ping"}]
+
 def mean(numbers):
     return float(sum(numbers)) / max(len(numbers), 1)
 
 events = {}
 for j in json_data['items']:
-  if base_name in from_json('metadata.name', j) and from_json('involvedObject.kind', j) not in ['ReplicaSet', 'PodGroup', 'Deployment']: # and 'perf-test-10-mork-1' in from_json('metadata.name', j):
+  if base_name in from_json('metadata.name', j) and from_json('involvedObject.kind', j) not in ['ReplicaSet', 'PodGroup', 'Deployment', 'Ingress']: # and 'perf-test-10-mork-1' in from_json('metadata.name', j):
     #scheduled not record print(from_json('lastTimestamp', j))
-    last_tm=time.mktime((datetime.datetime.strptime(from_json('metadata.creationTimestamp', j), "%Y-%m-%dT%H:%M:%SZ") + datetime.timedelta(hours=8)).timetuple())
+    last_tm=time.mktime((datetime.datetime.strptime(from_json('lastTimestamp', j), "%Y-%m-%dT%H:%M:%SZ") + datetime.timedelta(hours=8)).timetuple())
+    #last_tm=time.mktime((datetime.datetime.strptime(from_json('metadata.creationTimestamp', j), "%Y-%m-%dT%H:%M:%SZ") + datetime.timedelta(hours=8)).timetuple())
     #print(datetime.datetime.fromtimestamp(begin_tm), datetime.datetime.fromtimestamp(last_tm))
     if begin_tm > last_tm:
       continue
     #print(from_json('reason', j).decode('utf-8').encode('utf-8'), from_json('lastTimestamp', j))
     events.setdefault(from_json('involvedObject.name', j), []).append(
-      {'delta': last_tm-begin_tm, 'lastTimestamp': from_json('metadata.creationTimestamp', j), 'reason': from_json('reason', j).decode('utf-8').encode('utf-8')})
+      {'delta': last_tm-begin_tm, 'lastTimestamp': from_json('lastTimestamp', j), 'reason': from_json('reason', j).decode('utf-8').encode('utf-8')})
 
 pods = {}
 for j in pod_data['items']:
@@ -90,9 +100,9 @@ for j in pod_data['items']:
 
 arr = []
 for k, e in events.items():
-  print(k)
-  print('|'.join(["{}|{}".format(x['reason'], x['delta']) for x in sorted(e+pods[k], key=lambda x: x['delta'])]))
-  arr.append({x['reason']:x['delta'] for x in e+pods[k]})
+#  print(k)
+#  print('|'.join(["{}|{}".format(x['reason'], x['delta']) for x in sorted(e+pods[k], key=lambda x: x['delta'])]))
+  arr.append({x['reason']:x['delta'] for x in e+pods[k]+logs.get(k, [])})
 arr = [a for a in arr if 'Scheduled' in a ]
 print("total pods = {}".format(len(arr)))
 print("created \tmin={},\t max={},\t avg={}".format(min([x['Created'] for x in arr]), max([x['Created'] for x in arr]), mean([x['Created'] for x in arr])))
@@ -103,6 +113,8 @@ print("pull takes \tmin={},\t max={},\t avg={}".format(min([x['Pulled'] - x['Pul
 print("mount takes \tmin={},\t max={},\t avg={}".format(min([x['SuccessfulMountVolume'] - x['Scheduled'] for x in arr]), max([x['SuccessfulMountVolume'] - x['Scheduled'] for x in arr]), mean([x['SuccessfulMountVolume'] - x['Scheduled'] for x in arr])))
 print("start takes \tmin={},\t max={},\t avg={}".format(min([x['startedAt']-x['Scheduled'] for x in arr]), max([x['startedAt'] - x['Scheduled']for x in arr]), mean([x['startedAt']-x['Scheduled'] for x in arr])))
 print("startedAt \tmin={},\t max={},\t avg={}".format(min([x['startedAt'] for x in arr]), max([x['startedAt'] for x in arr]), mean([x['startedAt'] for x in arr])))
+if 'ping' in arr[0].keys():
+  print("pingsuccess \tmin={},\t max={},\t avg={}".format(min([x['ping'] for x in arr]), max([x['ping'] for x in arr]), mean([x['ping'] for x in arr])))
 print("running \tmin={},\t max={},\t avg={}".format(min([x['Started'] for x in arr]), max([x['Started'] for x in arr]), mean([x['Started'] for x in arr])))
 print("finishedAt \tmin={},\t max={},\t avg={}".format(min([x['finishedAt'] for x in arr]), max([x['finishedAt'] for x in arr]), mean([x['finishedAt'] for x in arr])))
 # print("excuted=", ([x['finishedAt'] - x['startedAt'] for x in arr]))

@@ -118,6 +118,15 @@ eni100: ## create one deploy with 20 pod
 20deploy: ## create 20 deploy with pvc
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 20 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test-evs_eni.json --image $(swr)/$(image)
 
+40deploy: ## create 40 deploy with pvc
+	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 40 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test-evs_eni.json --image $(swr)/$(image)
+
+50deploy: ## create 50 deploy with pvc
+	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 50 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test-evs_eni.json --image $(swr)/$(image)
+
+60deploy: ## create 60 deploy with pvc
+	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 60 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test-evs_eni.json --image $(swr)/$(image)
+
 100deploy: ## create 100 deploy with pvc
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 100 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test-evs_eni.json --image $(swr)/$(image)
 
@@ -126,6 +135,12 @@ eni100: ## create one deploy with 20 pod
 
 20evs: ## create 20 evs pvc
 	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 20 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/evs-cce.json 
+
+40evs: ## create 40 evs pvc
+	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 40 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/evs-cce.json 
+
+60evs: ## create 40 evs pvc
+	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 60 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/evs-cce.json 
 
 100evs: ## create 100 evs pvc
 	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 100 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/evs-cce.json 
@@ -140,6 +155,7 @@ eni100: ## create one deploy with 20 pod
 	bash $(current_dir)/script/benchmark-create-svc.sh --deploy-num 2000 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/svc-template/svc.json 
 
 event: ## get events and pods
+	bash $(current_dir)/script/get_pods_logs.sh $(namespace)
 	kubectl get events -ojson -n $(namespace) > /tmp/curl-get-event.log
 test: ## test svc
 	bash $(current_dir)/script/run_svc_fortio.sh $(namespace) http://$(url) 2>logs/$(url).log

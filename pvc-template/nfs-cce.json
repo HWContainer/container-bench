@@ -14,7 +14,6 @@
                 "storage": "10Gi"
             }
         },
-        "storageClassName": "csi-nas",
-        "volumeMode": "Filesystem"
+        "storageClassName": "csi-nas"
     }
 }

@@ -3,7 +3,7 @@
     "kind": "PersistentVolumeClaim",
     "metadata": {
         "annotations": {
-            "everest.io/disk-volume-type": "SAS"
+            "everest.io/disk-volume-type": "SATA"
         },
         "labels": {
             "failure-domain.beta.kubernetes.io/zone": "AZ"
@@ -20,7 +20,6 @@
                 "storage": "10Gi"
             }
         },
-        "storageClassName": "csi-disk",
-        "volumeMode": "Filesystem"
+        "storageClassName": "csi-disk"
     }
 }

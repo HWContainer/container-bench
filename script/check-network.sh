@@ -30,7 +30,7 @@ do
         timer_end=`date "+%Y-%m-%d %H:%M:%S"`
         end=$(date +"%s.%N")
 
-        >&2 echo -n "$timer_start $timer_end Check $MY_POD_NAME connection to ${ip} success take: "
+        >&2 echo -n "$timer_start $timer_end Check $MYPODNAME connection to ${ip} success take: "
         timediff $start $end
         exit 0
     fi
