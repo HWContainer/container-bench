@@ -172,4 +172,5 @@ createPods
 TOTAL_POD_NUM=$(( DEPLOY_NUM * POD_NUM ))
 #checkPodsRunning
 echo "Test finished:           `date +%Y-%m-%d' '%H:%M:%S.%N`"
+sleep 5
 #getCostEach

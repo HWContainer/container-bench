@@ -52,9 +52,9 @@ function createPods(){
 function checkPodsCreate(){
     finishedPods=0
     while [[ ${finishedPods} -ne ${TOTAL_POD_NUM} ]];do
-        finishedPods=`kubectl -n ${NAMESPACE} get svc | grep ${BASE_NAME}| grep -v "NAME"| wc -l`
+        finishedPods=`kubectl -n ${NAMESPACE} get dr| grep ${BASE_NAME}| grep -v "NAME"| wc -l`
     done
-    echo "All svc created:        `date +%Y-%m-%d' '%H:%M:%S.%N`"
+    echo "All dr created:        `date +%Y-%m-%d' '%H:%M:%S.%N`"
 }
 
 function checkPodsScheduled(){
@@ -75,7 +75,7 @@ function checkPodsRunning(){
         fi
         first=${outarray[0]}
         final=${finalarray[0]}
-        finishedPods=`kubectl -n ${NAMESPACE} get svc | grep ${BASE_NAME}| grep -v "NAME" | wc -l`
+        finishedPods=`kubectl -n ${NAMESPACE} get dr | grep ${BASE_NAME}| grep -v "NAME" | wc -l`
         if [[ $finishedPods -ge $first ]]; then
              echo "First $first($finishedPods) SVC Running:            `date +%Y-%m-%d' '%H:%M:%S.%N`"
              outarray=(${outarray[@]:1})

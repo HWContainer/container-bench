@@ -31,7 +31,15 @@ def parser_fortio_logs(file):
                 continue
             if 'Starting http test for' in i:
                 url = re.findall(r'(http://[^\s]+) with (\d+)', i)
-                case = [{}]
+                case = [{}, {}]
+                case.extend(url)
+                case_list.append(case)
+                start_print = True
+                continue
+
+            if 'Starting GRPC Ping test' in i:
+                url = re.findall(r'(http://[^\s]+) with (\d+)', i)
+                case = [{}, {}]
                 case.extend(url)
                 case_list.append(case)
                 start_print = True
@@ -61,6 +69,20 @@ def parser_fortio_logs(file):
             if 'timeout' in i:
                 case[0]["timeout"] = 1 + case[0].setdefault("timeout", 0)
                 continue
+            if 'mem max' in i:
+                p = re.findall(r'asm-(\w+)-1(.*) (\w+ mem) max ([\d\.]+)', i)
+                if p:
+                    p = p[0]
+                    case[1].setdefault(p[0]+p[2], p[3])
+                    case[1][p[0]+p[2]] = max(p[3], case[1][p[0]+p[2]])
+                continue
+            if 'cpu max' in i:
+                p = re.findall(r'asm-(\w+)-1(.*) (\w+ cpu) max ([\d\.]+)', i)
+                if p:
+                    p = p[0]
+                    case[1].setdefault(p[0]+p[2], p[3])
+                    case[1][p[0]+p[2]] = max(p[3], case[1][p[0]+p[2]])
+                continue
             if 'Code' in i:
                 codes = re.findall(r'Code\s+(.+)\s+:\s+(\d+)', i)
                 case[0].setdefault("code", [])
@@ -69,8 +91,11 @@ def parser_fortio_logs(file):
             if start_print:
                 print(i)
     
+    print('errors', ['commands', 'rps', 'avg', 'p50', 'p75', 'p90', 'p99', 'p99.9', 'connections'], ['client', 'forward', 'server', 'client', 'forward', 'server', 'client', 'forward', 'server', 'client', 'forward', 'server'])
     for c in case_list:
-        print(c[0], c[1:])
+        print(c[0], c[2:], 
+            [format(float(x), '.3f') for x in [c[1].get('clientfortio cpu', 0), c[1].get('forwordfortio cpu', 0),c[1].get('serverfortio cpu', 0),c[1].get('clientproxy cpu', 0), c[1].get('forwordproxy cpu', 0),c[1].get('serverproxy cpu', 0)]], 
+            [format(float(x)/1024/1024, '.2f') for x in [c[1].get('clientfortio mem', 0),c[1].get('forwordfortio mem', 0),c[1].get('serverfortio mem', 0),c[1].get('clientproxy mem', 0),c[1].get('forwordproxy mem', 0),c[1].get('serverproxy mem', 0)]])
     
 base_name='perf-test'
 if len(sys.argv) > 1:

@@ -2,6 +2,10 @@
   "apiVersion": "apps/v1",
   "kind": "Deployment",
   "metadata": {
+   "labels": {
+     "app": "POD_NAME",
+     "version": "v1"
+    },
     "name": "POD_NAME",
     "namespace": "NAMESPACE"
   },
@@ -11,7 +15,8 @@
     "revisionHistoryLimit": 10,
     "selector": {
       "matchLabels": {
-        "app": "POD_NAME"
+        "app": "POD_NAME",
+        "version": "v1"
       }
     },
     "strategy": {
@@ -22,10 +27,12 @@
         "annotations": {
           "cri.cci.io/container-type": "secure-container",
           "log.stdoutcollection.kubernetes.io": "{\"collectionContainers\": [\"container-0\"]}",
-          "metrics.alpha.kubernetes.io/custom-endpoints": "[{api:'',path:'',port:'',names:''}]"
+          "metrics.alpha.kubernetes.io/custom-endpoints": "[{api:'',path:'',port:'',names:''}]",
+          "sidecar.istio.io/inject": "true"
         },
         "labels": {
-          "app": "POD_NAME"
+          "app": "POD_NAME",
+          "version": "v1"
         }
       },
       "spec": {
@@ -34,6 +41,11 @@
             "image": "POD_IMAGE",
             "imagePullPolicy": "IfNotPresent",
             "name": "container-0",
+            "args": [
+              "server",
+              "-P",
+              "8888 asm-server-1:8080"
+            ],
             "resources": {
               "requests": {
                 "cpu": "1"

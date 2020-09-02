@@ -1,0 +1,33 @@
+{
+    "apiVersion": "v1",
+    "kind": "Service",
+    "metadata": {
+        "labels": {
+            "app": "POD_NAME",
+            "name": "SVC_NAME"
+        },
+        "name": "SVC_NAME",
+        "namespace": "NAMESPACE"
+    },
+    "spec": {
+        "ports": [
+            {
+                "name": "tcp",
+                "port": 8080,
+                "protocol": "TCP",
+                "targetPort": 8080
+            },
+            {
+                "name": "grpc",
+                "port": 8079,
+                "protocol": "TCP",
+                "targetPort": 8079
+            }
+        ],
+        "selector": {
+            "app": "POD_NAME"
+        },
+        "sessionAffinity": "None",
+        "type": "ClusterIP"
+    }
+}

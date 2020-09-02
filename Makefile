@@ -9,13 +9,16 @@ export $(shell sed 's/=.*//' $(cnf))
 # HELP
 # This will output the help for each task
 # thanks to https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
-.PHONY: help
+.PHONY: help clean4 waiting test_ddd
 
 help: ## This help.
 	echo $(dir $(mkfile_path))
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_0-9-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 .DEFAULT_GOAL := help
+
+test_ddd: 
+	clean4
 
 image: ## build image
 	docker build -f $(current_dir)/Dockerfile.image -t $(swr)/$(image) $(current_dir)/script
@@ -50,11 +53,104 @@ server: ## create a server for ping
         
 metrics: ## create a grafana and process-exporter
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --pod-num 1 --name grafana-server --namespace $(namespace) --pod-template $(current_dir)/deploy-template/grafana-server.json --image $(swr)/$(grafanaimage)
+	bash $(current_dir)/script/benchmark-create-svc.sh --deploy-num 1 --pod-num 1 --name grafana-server --namespace $(namespace) --pod-template $(current_dir)/svc-template/grafana_svc.json 
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --pod-num 1 --name prometheus-server --namespace $(namespace) --pod-template $(current_dir)/deploy-template/promethus-server.json --image $(swr)/$(prometheusimage)
+	bash $(current_dir)/script/benchmark-create-svc.sh --deploy-num 1 --pod-num 1 --name prometheus-server --namespace $(namespace) --pod-template $(current_dir)/svc-template/prometheus_svc.json 
 	bash $(current_dir)/script/benchmark-create-ds.sh --pod-num 1 --name process-exporter --namespace $(namespace) --pod-template $(current_dir)/ds-template/process-exporter.json --image $(swr)/$(processimage)
+	bash $(current_dir)/script/benchmark-create-ds.sh --pod-num 1 --name cadvisor-exporter --namespace $(namespace) --pod-template $(current_dir)/ds-template/cadvisor-exporter.json --image $(swr)/$(fortioimage)
 
-fortio: ## create fortio as client
-	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1 --name fortio --namespace $(namespace) --pod-template $(current_dir)/deploy-template/fortio.json --image $(swr)/$(fortioimage)
+asm_server: 
+	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1 --name asm-server --namespace $(namespace) --pod-template $(current_dir)/deploy-template/fortio.json --image $(swr)/$(fortioimage)
+	bash $(current_dir)/script/benchmark-create-svc.sh --deploy-num 1 --pod-num 1 --name asm-server --namespace $(namespace) --pod-template $(current_dir)/svc-template/fortio_svc.json 
+
+asm_client:
+	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1 --name asm-client --namespace $(namespace) --pod-template $(current_dir)/deploy-template/fortio.json --image $(swr)/$(fortioimage)
+	bash $(current_dir)/script/benchmark-create-svc.sh --deploy-num 1 --pod-num 1 --name asm-client --namespace $(namespace) --pod-template $(current_dir)/svc-template/fortio_svc.json 
+
+asm_server_inject_http:
+	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1 --name asm-server --namespace $(namespace) --pod-template $(current_dir)/deploy-template/fortio_inject.json --image $(swr)/$(fortioimage)
+	bash $(current_dir)/script/benchmark-create-svc.sh --deploy-num 1 --pod-num 1 --name asm-server --namespace $(namespace) --pod-template $(current_dir)/svc-template/fortio_svc.json 
+	KUBECONFIG=$(control_plane) bash $(current_dir)/script/benchmark-create-dr.sh --deploy-num 1 --pod-num 1 --name asm-server --namespace $(namespace) --pod-template $(current_dir)/svc-template/dr.json 
+	KUBECONFIG=$(control_plane) bash $(current_dir)/script/benchmark-create-vs.sh --deploy-num 1 --pod-num 1 --name asm-server --namespace $(namespace) --pod-template $(current_dir)/svc-template/vs_http.json 
+
+asm_forword_inject_http:
+	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1 --name asm-forword --namespace $(namespace) --pod-template $(current_dir)/deploy-template/fortio_forword_inject.json --image $(swr)/$(fortioimage)
+	bash $(current_dir)/script/benchmark-create-svc.sh --deploy-num 1 --pod-num 1 --name asm-forword --namespace $(namespace) --pod-template $(current_dir)/svc-template/fortio_forword_svc.json 
+	KUBECONFIG=$(control_plane) bash $(current_dir)/script/benchmark-create-dr.sh --deploy-num 1 --pod-num 1 --name asm-forword --namespace $(namespace) --pod-template $(current_dir)/svc-template/dr.json 
+	KUBECONFIG=$(control_plane) bash $(current_dir)/script/benchmark-create-vs.sh --deploy-num 1 --pod-num 1 --name asm-forword --namespace $(namespace) --pod-template $(current_dir)/svc-template/vs_forword_http.json 
+
+asm_client_inject_http:
+	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1 --name asm-client --namespace $(namespace) --pod-template $(current_dir)/deploy-template/fortio_inject.json --image $(swr)/$(fortioimage)
+	bash $(current_dir)/script/benchmark-create-svc.sh --deploy-num 1 --pod-num 1 --name asm-client --namespace $(namespace) --pod-template $(current_dir)/svc-template/fortio_svc.json 
+	KUBECONFIG=$(control_plane) bash $(current_dir)/script/benchmark-create-dr.sh --deploy-num 1 --pod-num 1 --name asm-client --namespace $(namespace) --pod-template $(current_dir)/svc-template/dr.json 
+	KUBECONFIG=$(control_plane) bash $(current_dir)/script/benchmark-create-vs.sh --deploy-num 1 --pod-num 1 --name asm-client --namespace $(namespace) --pod-template $(current_dir)/svc-template/vs_http.json 
+
+asm_client_inject_tcp: ## client inject tcp proxy
+	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1 --name asm-client --namespace $(namespace) --pod-template $(current_dir)/deploy-template/fortio_inject.json --image $(swr)/$(fortioimage)
+	bash $(current_dir)/script/benchmark-create-svc.sh --deploy-num 1 --pod-num 1 --name asm-client --namespace $(namespace) --pod-template $(current_dir)/svc-template/fortio_svc_tcp.json 
+	KUBECONFIG=$(control_plane) bash $(current_dir)/script/benchmark-create-dr.sh --deploy-num 1 --pod-num 1 --name asm-client --namespace $(namespace) --pod-template $(current_dir)/svc-template/dr.json 
+	KUBECONFIG=$(control_plane) bash $(current_dir)/script/benchmark-create-vs.sh --deploy-num 1 --pod-num 1 --name asm-client --namespace $(namespace) --pod-template $(current_dir)/svc-template/vs_tcp.json 
+
+asm_forword_inject_tcp: ## forword inject tcp proxy
+	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1 --name asm-forword --namespace $(namespace) --pod-template $(current_dir)/deploy-template/fortio_forword_inject.json --image $(swr)/$(fortioimage)
+	bash $(current_dir)/script/benchmark-create-svc.sh --deploy-num 1 --pod-num 1 --name asm-forword --namespace $(namespace) --pod-template $(current_dir)/svc-template/fortio_forword_svc_tcp.json 
+	KUBECONFIG=$(control_plane) bash $(current_dir)/script/benchmark-create-dr.sh --deploy-num 1 --pod-num 1 --name asm-forword --namespace $(namespace) --pod-template $(current_dir)/svc-template/dr.json 
+	KUBECONFIG=$(control_plane) bash $(current_dir)/script/benchmark-create-vs.sh --deploy-num 1 --pod-num 1 --name asm-forword --namespace $(namespace) --pod-template $(current_dir)/svc-template/vs_forword_tcp.json 
+
+asm_server_inject_tcp: ## server inject tcp proxy
+	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1 --name asm-server --namespace $(namespace) --pod-template $(current_dir)/deploy-template/fortio_inject.json --image $(swr)/$(fortioimage)
+	bash $(current_dir)/script/benchmark-create-svc.sh --deploy-num 1 --pod-num 1 --name asm-server --namespace $(namespace) --pod-template $(current_dir)/svc-template/fortio_svc_tcp.json 
+	KUBECONFIG=$(control_plane) bash $(current_dir)/script/benchmark-create-dr.sh --deploy-num 1 --pod-num 1 --name asm-server --namespace $(namespace) --pod-template $(current_dir)/svc-template/dr.json 
+	KUBECONFIG=$(control_plane) bash $(current_dir)/script/benchmark-create-vs.sh --deploy-num 1 --pod-num 1 --name asm-server --namespace $(namespace) --pod-template $(current_dir)/svc-template/vs_tcp.json 
+
+asm_sc: clean4 waiting asm_client asm_server  ## create s->c module
+	make waiting
+	mkdir -p $(current_dir)\logs
+	prometheus_url=$(prometheus_url) default_cluster=$(default_cluster) bash -x $(current_dir)/script/asm_latency_http.sh $(namespace) http://asm-server-1:8080 2>logs/sc_http.log 1>&2
+	prometheus_url=$(prometheus_url) default_cluster=$(default_cluster) bash -x $(current_dir)/script/asm_latency_grpc.sh $(namespace) http://asm-server-1:8079 2>logs/sc_grpc.log 1>&2
+asm_scp_http: clean4 waiting asm_client asm_server_inject_http ## create s->cp module
+	make waiting
+	mkdir -p $(current_dir)\logs
+	prometheus_url=$(prometheus_url) default_cluster=$(default_cluster) bash -x $(current_dir)/script/asm_latency_http.sh $(namespace) http://asm-server-1:8080 2>logs/http_scp_http.log 1>&2
+	prometheus_url=$(prometheus_url) default_cluster=$(default_cluster) bash -x $(current_dir)/script/asm_latency_grpc.sh $(namespace) http://asm-server-1:8079 2>logs/scp_grpc.log 1>&2
+asm_spcp_http: clean4 waiting asm_client_inject_http asm_server_inject_http ## create sp->cp module
+	make waiting
+	mkdir -p $(current_dir)\logs
+	prometheus_url=$(prometheus_url) default_cluster=$(default_cluster) bash -x $(current_dir)/script/asm_latency_http.sh $(namespace) http://asm-server-1:8080 2>logs/http_spcp_http.log 1>&2
+	prometheus_url=$(prometheus_url) default_cluster=$(default_cluster) bash -x $(current_dir)/script/asm_latency_grpc.sh $(namespace) http://asm-server-1:8079 2>logs/spcp_grpc.log 1>&2
+asm_spfpcp_http: clean4 waiting asm_server_inject_http asm_client_inject_http asm_forword_inject_http ## create sp->fp->cp module
+	make waiting
+	mkdir -p $(current_dir)\logs
+	prometheus_url=$(prometheus_url) default_cluster=$(default_cluster) bash -x $(current_dir)/script/asm_latency_http.sh $(namespace) http://asm-forword-1:8888 2>logs/http_spfpcp_http.log 1>&2
+asm_scp_tcp: clean4 waiting asm_client asm_server_inject_tcp ## create s->cp module
+	make waiting
+	mkdir -p $(current_dir)\logs
+	prometheus_url=$(prometheus_url) default_cluster=$(default_cluster) bash -x $(current_dir)/script/asm_latency_http.sh $(namespace) http://asm-server-1:8080 2>logs/tcp_scp_http.log 1>&2
+asm_spcp_tcp: clean4 waiting asm_client_inject_tcp asm_server_inject_tcp ## create tcp sp->cp module
+	make waiting
+	mkdir -p $(current_dir)\logs
+	prometheus_url=$(prometheus_url) default_cluster=$(default_cluster) bash -x $(current_dir)/script/asm_latency_http.sh $(namespace) http://asm-server-1:8080 2>logs/tcp_spcp_http.log 1>&2
+asm_spfpcp_tcp: clean4 waiting asm_server_inject_tcp asm_client_inject_tcp asm_forword_inject_tcp ## create tcp sp->fp->cp module
+	make waiting
+	mkdir -p $(current_dir)\logs
+	prometheus_url=$(prometheus_url) default_cluster=$(default_cluster) bash -x $(current_dir)/script/asm_latency_http.sh $(namespace) http://asm-forword-1:8888 2>logs/tcp_spfpcp_http.log 1>&2
+
+all_u_gi: 
+	make asm_sc; make asm_scp_http; make asm_spcp_http; make asm_spfpcp_http; make asm_scp_tcp; make asm_spcp_tcp; make asm_spfpcp_tcp
+
+waiting:
+	sleep 120
+
+clean4: 
+	kubectl get deploy -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep -e 'asm' |xargs -i kubectl delete deploy -n $(namespace) --wait=true {}
+	kubectl get svc -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep -e 'asm' |xargs -i kubectl delete svc -n $(namespace) --wait=true {}
+	KUBECONFIG=$(control_plane) sh -c "kubectl get dr -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep -e 'asm' |xargs -i kubectl delete dr -n $(namespace) --wait=true {}"
+	KUBECONFIG=$(control_plane) sh -c "kubectl get vs -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep -e 'asm' |xargs -i kubectl delete vs -n $(namespace) --wait=true {}"
+
+clean3: 
+	kubectl get deploy -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep -e 'grafana' -e 'promethus'|xargs -i kubectl delete deploy -n $(namespace) --wait=true {}
+	kubectl get ds -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep process |xargs -i kubectl delete ds -n $(namespace) --wait=true {}
+	kubectl delete pods -n $(namespace) perf-server-1
 
 clean2:
 	kubectl get pods -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep 'perf-hostnetwork'|xargs -i kubectl delete pod -n $(namespace) --ignore-not-found=true --wait=true {}
@@ -159,3 +255,12 @@ event: ## get events and pods
 	kubectl get events -ojson -n $(namespace) > /tmp/curl-get-event.log
 test: ## test svc
 	bash $(current_dir)/script/run_svc_fortio.sh $(namespace) http://$(url) 2>logs/$(url).log
+
+
+asm_latency_tests: asm_latency_http asm_latency_grpc
+
+asm_latency_http:
+	default_cluster=$(default_cluster) bash -x $(current_dir)/script/asm_latency_http.sh $(namespace) http://$(url) 2>logs/$(url)_http.log
+
+asm_latency_grpc:
+	default_cluster=$(default_cluster) bash -x $(current_dir)/script/asm_latency_grpc.sh $(namespace) http://$(url) 2>logs/$(url)_grpc.log

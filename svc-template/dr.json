@@ -1,0 +1,19 @@
+{
+    "apiVersion": "networking.istio.io/v1beta1",
+    "kind": "DestinationRule",
+    "metadata": {
+        "name": "SVC_NAME-destination",
+        "namespace": "NAMESPACE"
+    },
+    "spec": {
+        "host": "SVC_NAME",
+        "subsets": [
+            {
+                "labels": {
+                    "version": "v1"
+                },
+                "name": "v1"
+            }
+        ]
+    }
+}

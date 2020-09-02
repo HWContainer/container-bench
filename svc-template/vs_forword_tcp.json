@@ -1,0 +1,36 @@
+{
+    "apiVersion": "networking.istio.io/v1beta1",
+    "kind": "VirtualService",
+    "metadata": {
+        "name": "POD_NAME-route",
+        "namespace": "NAMESPACE"
+    },
+    "spec": {
+        "hosts": [
+            "POD_NAME"
+        ],
+        "tcp": [
+            {
+                "match": [
+                    {
+                        "gateways": [
+                            "mesh"
+                        ],
+                        "port": 8888
+                    }
+                ],
+                "route": [
+                    {
+                        "destination": {
+                            "host": "POD_NAME",
+                            "port": {
+                                "number": 8888
+                            },
+                            "subset": "v1"
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}

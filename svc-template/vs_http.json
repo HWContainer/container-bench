@@ -1,0 +1,57 @@
+{
+    "apiVersion": "networking.istio.io/v1beta1",
+    "kind": "VirtualService",
+    "metadata": {
+        "name": "SVC_NAME-route",
+        "namespace": "NAMESPACE"
+    },
+    "spec": {
+        "hosts": [
+            "SVC_NAME"
+        ],
+        "http": [
+            {
+                "match": [
+                    {
+                        "gateways": [
+                            "mesh"
+                        ],
+                        "port": 8080
+                    }
+                ],
+                "route": [
+                    {
+                        "destination": {
+                            "host": "SVC_NAME",
+                            "port": {
+                                "number": 8080
+                            },
+                            "subset": "v1"
+                        }
+                    }
+                ]
+            },
+            {
+                "match": [
+                    {
+                        "gateways": [
+                            "mesh"
+                        ],
+                        "port": 8079
+                    }
+                ],
+                "route": [
+                    {
+                        "destination": {
+                            "host": "SVC_NAME",
+                            "port": {
+                                "number": 8079
+                            },
+                            "subset": "v1"
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}

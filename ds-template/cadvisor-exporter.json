@@ -1,0 +1,63 @@
+{
+    "kind": "DaemonSet",
+    "apiVersion": "apps/v1",
+    "metadata": {
+        "name": "POD_NAME",
+        "namespace": "NAMESPACE",
+        "labels": {
+            "app": "POD_NAME"
+        }
+    },
+    "spec": {
+        "selector": {
+            "matchLabels": {
+                "app": "POD_NAME"
+            }
+        },
+        "template": {
+            "metadata": {
+                "labels": {
+                    "app": "POD_NAME"
+                }
+            },
+            "spec": {
+                "containers": [
+                    {
+                        "name": "POD_NAME",
+                        "image": "POD_IMAGE",
+                        "args": [
+                            "server",
+                            "-P",
+                            "14194 127.0.0.1:4194"
+                        ],
+                        "imagePullPolicy": "IfNotPresent"
+                    }
+                ],
+                "restartPolicy": "Always",
+                "terminationGracePeriodSeconds": 30,
+                "dnsPolicy": "ClusterFirst",
+                "hostNetwork": true,
+                "hostPID": true,
+                "securityContext": {},
+                "imagePullSecrets": [
+                    {
+                        "name": "default-secret"
+                    }
+                ],
+                "schedulerName": "default-scheduler",
+                "tolerations": [
+                    {
+                        "operator": "Exists"
+                    }
+                ]
+            }
+        },
+        "updateStrategy": {
+            "type": "RollingUpdate",
+            "rollingUpdate": {
+                "maxUnavailable": 1
+            }
+        },
+        "revisionHistoryLimit": 10
+    }
+}
