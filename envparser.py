@@ -73,14 +73,17 @@ events = {}
 for j in json_data['items']:
   if base_name in from_json('metadata.name', j) and from_json('involvedObject.kind', j) not in ['ReplicaSet', 'PodGroup', 'Deployment', 'Ingress']: # and 'perf-test-10-mork-1' in from_json('metadata.name', j):
     #scheduled not record print(from_json('lastTimestamp', j))
-    last_tm=time.mktime((datetime.datetime.strptime(from_json('lastTimestamp', j), "%Y-%m-%dT%H:%M:%SZ") + datetime.timedelta(hours=8)).timetuple())
+    last_time=from_json('lastTimestamp', j)
+    if last_time is None:
+      last_time = from_json('metadata.creationTimestamp', j)
+    last_tm=time.mktime((datetime.datetime.strptime(last_time, "%Y-%m-%dT%H:%M:%SZ") + datetime.timedelta(hours=8)).timetuple())
     #last_tm=time.mktime((datetime.datetime.strptime(from_json('metadata.creationTimestamp', j), "%Y-%m-%dT%H:%M:%SZ") + datetime.timedelta(hours=8)).timetuple())
     #print(datetime.datetime.fromtimestamp(begin_tm), datetime.datetime.fromtimestamp(last_tm))
     if begin_tm > last_tm:
       continue
     #print(from_json('reason', j).decode('utf-8').encode('utf-8'), from_json('lastTimestamp', j))
     events.setdefault(from_json('involvedObject.name', j), []).append(
-      {'delta': last_tm-begin_tm, 'lastTimestamp': from_json('lastTimestamp', j), 'reason': from_json('reason', j).decode('utf-8').encode('utf-8')})
+      {'delta': last_tm-begin_tm, 'lastTimestamp': last_time, 'reason': from_json('reason', j).decode('utf-8').encode('utf-8')})
 
 pods = {}
 for j in pod_data['items']:
