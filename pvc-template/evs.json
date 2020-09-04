@@ -7,13 +7,13 @@
     },
     "spec": {
         "accessModes": [
-            "ReadWriteMany"
+            "ReadWriteOnce"
         ],
         "resources": {
             "requests": {
-                "storage": "10Gi"
+                "storage": "20Gi"
             }
         },
-        "storageClassName": "sas"
+        "storageClassName": "alicloud-disk-available"
     }
 }

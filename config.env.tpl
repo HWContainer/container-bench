@@ -19,3 +19,5 @@ control_plane=/root/.kube/config
 default_cluster=/root/.kube/config.c
 prometheus_url=
 cluster_list=
+
+evs=evs-cce

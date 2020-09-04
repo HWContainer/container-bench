@@ -32,6 +32,13 @@
                             "path": "/proc",
                             "type": ""
                         }
+                    },
+                    {
+                        "name": "sys",
+                        "hostPath": {
+                            "path": "/sys",
+                            "type": ""
+                        }
                     }
                 ],
                 "containers": [
@@ -39,14 +46,22 @@
                         "name": "POD_NAME",
                         "image": "POD_IMAGE",
                         "args": [
+                            "--web.listen-address=0.0.0.0:9101",
                             "--path.procfs=/host/proc",
-                            "--web.listen-address=0.0.0.0:9256"
+                            "--path.sysfs=/host/sys",
+                            "--collector.filesystem.ignored-mount-points=^/(dev|proc|sys|var/lib/docker/.+)($|/)",
+                            "--collector.filesystem.ignored-fs-types=^(autofs|binfmt_misc|cgroup|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|mqueue|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|sysfs|tracefs)$"
                         ],
                         "volumeMounts": [
                             {
                                 "name": "proc",
                                 "readOnly": true,
                                 "mountPath": "/host/proc"
+                            },
+                            {
+                                "name": "sys",
+                                "readOnly": true,
+                                "mountPath": "/host/sys"
                             }
                         ],
                         "imagePullPolicy": "Always"

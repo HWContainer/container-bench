@@ -103,22 +103,32 @@ for j in pod_data['items']:
 
 arr = []
 for k, e in events.items():
-#  print(k)
-#  print('|'.join(["{}|{}".format(x['reason'], x['delta']) for x in sorted(e+pods[k], key=lambda x: x['delta'])]))
+  #print(k)
+  #print('|'.join(["{}|{}".format(x['reason'], x['delta']) for x in sorted(e+pods[k], key=lambda x: x['delta'])]))
   arr.append({x['reason']:x['delta'] for x in e+pods[k]+logs.get(k, [])})
 arr = [a for a in arr if 'Scheduled' in a ]
 print("total pods = {}".format(len(arr)))
 print("created \tmin={},\t max={},\t avg={}".format(min([x['Created'] for x in arr]), max([x['Created'] for x in arr]), mean([x['Created'] for x in arr])))
 print("scheduled \tmin={},\t max={},\t avg={}".format(min([x['Scheduled'] for x in arr]), max([x['Scheduled'] for x in arr]), mean([x['Scheduled'] for x in arr])))
-print("pulling \tmin={},\t max={},\t avg={}".format(min([x['Pulling'] for x in arr]), max([x['Pulling'] for x in arr]), mean([x['Pulling'] for x in arr])))
-print("pulled  \tmin={},\t max={},\t avg={}".format(min([x['Pulled'] for x in arr]), max([x['Pulled'] for x in arr]), mean([x['Pulled'] for x in arr])))
-print("pull takes \tmin={},\t max={},\t avg={}".format(min([x['Pulled'] - x['Pulling'] for x in arr]), max([x['Pulled'] - x['Pulling'] for x in arr]), mean([x['Pulled'] - x['Pulling'] for x in arr])))
-print("mount takes \tmin={},\t max={},\t avg={}".format(min([x['SuccessfulMountVolume'] - x['Scheduled'] for x in arr]), max([x['SuccessfulMountVolume'] - x['Scheduled'] for x in arr]), mean([x['SuccessfulMountVolume'] - x['Scheduled'] for x in arr])))
-print("start takes \tmin={},\t max={},\t avg={}".format(min([x['startedAt']-x['Scheduled'] for x in arr]), max([x['startedAt'] - x['Scheduled']for x in arr]), mean([x['startedAt']-x['Scheduled'] for x in arr])))
+if 'AllocIPSucceed' in arr[0].keys():
+  print("net takes \tmin={},\t max={},\t avg={}".format(min([x['AllocIPSucceed'] - x['Scheduled'] for x in arr]), max([x['AllocIPSucceed'] - x['Scheduled'] for x in arr]), mean([x['AllocIPSucceed'] - x['Scheduled'] for x in arr])))
+if all(['Pulling' in x.keys() for x in arr]):
+  print("pulling \tmin={},\t max={},\t avg={}".format(min([x['Pulling'] for x in arr]), max([x['Pulling'] for x in arr]), mean([x['Pulling'] for x in arr])))
+  print("pulled  \tmin={},\t max={},\t avg={}".format(min([x['Pulled'] for x in arr]), max([x['Pulled'] for x in arr]), mean([x['Pulled'] for x in arr])))
+  print("pull takes \tmin={},\t max={},\t avg={}".format(min([x['Pulled'] - x['Pulling'] for x in arr]), max([x['Pulled'] - x['Pulling'] for x in arr]), mean([x['Pulled'] - x['Pulling'] for x in arr])))
+else:
+  print('pulling events {}'.format(sum(['Pulling' in x.keys() for x in arr])))
+if 'SuccessfulMountVolume' in arr[0].keys():
+  print("mount takes \tmin={},\t max={},\t avg={}".format(min([x['SuccessfulMountVolume'] - x['Scheduled'] for x in arr]), max([x['SuccessfulMountVolume'] - x['Scheduled'] for x in arr]), mean([x['SuccessfulMountVolume'] - x['Scheduled'] for x in arr])))
+  print("start takes \tmin={},\t max={},\t avg={}".format(min([x['startedAt']-x['Scheduled'] for x in arr]), max([x['startedAt'] - x['Scheduled']for x in arr]), mean([x['startedAt']-x['Scheduled'] for x in arr])))
 print("startedAt \tmin={},\t max={},\t avg={}".format(min([x['startedAt'] for x in arr]), max([x['startedAt'] for x in arr]), mean([x['startedAt'] for x in arr])))
-if 'ping' in arr[0].keys():
+
+if all(['ping' in x.keys() for x in arr]):
   print("pingsuccess \tmin={},\t max={},\t avg={}".format(min([x['ping'] for x in arr]), max([x['ping'] for x in arr]), mean([x['ping'] for x in arr])))
-print("running \tmin={},\t max={},\t avg={}".format(min([x['Started'] for x in arr]), max([x['Started'] for x in arr]), mean([x['Started'] for x in arr])))
+if all(['Started' in x.keys() for x in arr]):
+  print("running \tmin={},\t max={},\t avg={}".format(min([x['Started'] for x in arr]), max([x['Started'] for x in arr]), mean([x['Started'] for x in arr])))
+else:
+  print('running events {}'.format(sum(['Started' in x.keys() for x in arr])))
 print("finishedAt \tmin={},\t max={},\t avg={}".format(min([x['finishedAt'] for x in arr]), max([x['finishedAt'] for x in arr]), mean([x['finishedAt'] for x in arr])))
 # print("excuted=", ([x['finishedAt'] - x['startedAt'] for x in arr]))
 # print("\n".join(events.keys()))

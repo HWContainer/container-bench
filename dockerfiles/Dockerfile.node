@@ -1,0 +1,1 @@
+FROM swr.cn-south-1.myhuaweicloud.com/perf-test/node-exporter:v1.0.1

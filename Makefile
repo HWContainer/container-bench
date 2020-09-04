@@ -41,6 +41,9 @@ base_image: ## build image
 	docker build -f $(current_dir)/dockerfiles/Dockerfile.process -t $(swr)/$(processimage) $(current_dir)/script
 	docker push $(swr)/$(processimage)
 	docker rmi $(swr)/$(processimage)
+	docker build -f $(current_dir)/dockerfiles/Dockerfile.node -t $(swr)/$(nodeimage) $(current_dir)/script
+	docker push $(swr)/$(nodeimage)
+	docker rmi $(swr)/$(nodeimage)
 
 moreimage: ## build image special l layer and c size
 	dd if=/dev/urandom of=sample bs=1M count=$(c)
@@ -52,12 +55,25 @@ server: ## create a server for ping
 	bash $(current_dir)/script/benchmark-create-pod.sh --pod-num 1 --name perf-server --namespace $(namespace) --pod-template $(current_dir)/pod-template/pod.json --image $(swr)/$(serverimage)
         
 metrics: ## create a grafana and process-exporter
+	make monit; make process; make cadvisor; make node
+
+monit:
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --pod-num 1 --name grafana-server --namespace $(namespace) --pod-template $(current_dir)/deploy-template/grafana-server.json --image $(swr)/$(grafanaimage)
 	bash $(current_dir)/script/benchmark-create-svc.sh --deploy-num 1 --pod-num 1 --name grafana-server --namespace $(namespace) --pod-template $(current_dir)/svc-template/grafana_svc.json 
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --pod-num 1 --name prometheus-server --namespace $(namespace) --pod-template $(current_dir)/deploy-template/promethus-server.json --image $(swr)/$(prometheusimage)
 	bash $(current_dir)/script/benchmark-create-svc.sh --deploy-num 1 --pod-num 1 --name prometheus-server --namespace $(namespace) --pod-template $(current_dir)/svc-template/prometheus_svc.json 
+
+process:
 	bash $(current_dir)/script/benchmark-create-ds.sh --pod-num 1 --name process-exporter --namespace $(namespace) --pod-template $(current_dir)/ds-template/process-exporter.json --image $(swr)/$(processimage)
+
+cadvisor:
 	bash $(current_dir)/script/benchmark-create-ds.sh --pod-num 1 --name cadvisor-exporter --namespace $(namespace) --pod-template $(current_dir)/ds-template/cadvisor-exporter.json --image $(swr)/$(fortioimage)
+
+node:
+	bash $(current_dir)/script/benchmark-create-ds.sh --pod-num 1 --name process-exporter --namespace $(namespace) --pod-template $(current_dir)/ds-template/node-exporter.json --image $(swr)/$(nodeimage)
+
+fortio:
+	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1 --name fortio --namespace $(namespace) --pod-template $(current_dir)/deploy-template/fortio.json --image $(swr)/$(fortioimage)
 
 asm_server: 
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1 --name asm-server --namespace $(namespace) --pod-template $(current_dir)/deploy-template/fortio.json --image $(swr)/$(fortioimage)
@@ -148,8 +164,8 @@ clean4:
 	KUBECONFIG=$(control_plane) sh -c "kubectl get vs -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep -e 'asm' |xargs -i kubectl delete vs -n $(namespace) --wait=true {}"
 
 clean3: 
-	kubectl get deploy -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep -e 'grafana' -e 'promethus'|xargs -i kubectl delete deploy -n $(namespace) --wait=true {}
-	kubectl get ds -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep process |xargs -i kubectl delete ds -n $(namespace) --wait=true {}
+	kubectl get deploy -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep -e 'grafana' -e 'prometheus'|xargs -i kubectl delete deploy -n $(namespace) --wait=true {}
+	kubectl get ds -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep -e process -e cadvisor|xargs -i kubectl delete ds -n $(namespace) --wait=true {}
 	kubectl delete pods -n $(namespace) perf-server-1
 
 clean2:
@@ -161,6 +177,7 @@ clean: ## clean deploy pod and pvc
 	kubectl get deploy -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep 'perf-test'|xargs -i kubectl delete deploy -n $(namespace) --wait=true {}
 	kubectl get pods -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep 'perf-test'|xargs -i kubectl delete pod -n $(namespace) --ignore-not-found=true --wait=true {}
 	kubectl get pvc -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep 'perf-test'|xargs -i kubectl delete pvc -n $(namespace) --ignore-not-found=true --wait=true {}
+	kubectl get pv -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep 'perf-test'|xargs -i kubectl delete pv --ignore-not-found=true --wait=true {}
 	echo "Clean end:                `date +%Y-%m-%d' '%H:%M:%S.%N`"
 
 count: ## count node for each pod
@@ -230,19 +247,22 @@ eni100: ## create one deploy with 20 pod
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 20 --pod-num 5 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test-evs_eni.json --image $(swr)/$(image)
 
 20evs: ## create 20 evs pvc
-	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 20 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/evs-cce.json 
+	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 20 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/$(evs).json 
 
 40evs: ## create 40 evs pvc
-	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 40 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/evs-cce.json 
+	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 40 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/$(evs).json 
 
 60evs: ## create 40 evs pvc
-	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 60 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/evs-cce.json 
+	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 60 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/$(evs).json 
 
 100evs: ## create 100 evs pvc
-	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 100 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/evs-cce.json 
+	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 100 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/$(evs).json 
+
+20nfs-pv: ## create 20 nfs pvc
+	bash $(current_dir)/script/benchmark-create-pv.sh --deploy-num 20 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/nfs-pv.json 
 
 20nfs: ## create 20 nfs pvc
-	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 20 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/nfs-cce.json 
+	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 20 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/$(nfs).json 
 
 20svc: ## create 20 svc
 	bash $(current_dir)/script/benchmark-create-svc.sh --deploy-num 20 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/svc-template/svc.json 
@@ -254,13 +274,13 @@ event: ## get events and pods
 	bash $(current_dir)/script/get_pods_logs.sh $(namespace)
 	kubectl get events -ojson -n $(namespace) > /tmp/curl-get-event.log
 test: ## test svc
-	bash $(current_dir)/script/run_svc_fortio.sh $(namespace) http://$(url) 2>logs/$(url).log
+	prometheus_url=$(prometheus_url) bash $(current_dir)/script/run_svc_fortio.sh $(namespace) http://$(url) 2>logs/$(url).log 1>&2
 
 
 asm_latency_tests: asm_latency_http asm_latency_grpc
 
 asm_latency_http:
-	default_cluster=$(default_cluster) bash -x $(current_dir)/script/asm_latency_http.sh $(namespace) http://$(url) 2>logs/$(url)_http.log
+	default_cluster=$(default_cluster) bash -x $(current_dir)/script/asm_latency_http.sh $(namespace) http://$(url) 2>logs/$(url)_http.log 1>&2
 
 asm_latency_grpc:
-	default_cluster=$(default_cluster) bash -x $(current_dir)/script/asm_latency_grpc.sh $(namespace) http://$(url) 2>logs/$(url)_grpc.log
+	default_cluster=$(default_cluster) bash -x $(current_dir)/script/asm_latency_grpc.sh $(namespace) http://$(url) 2>logs/$(url)_grpc.log 1>&2

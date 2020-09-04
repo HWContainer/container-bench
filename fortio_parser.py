@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+from collections import OrderedDict
 def parser_fortio_logs(file):
     case_list = []
     case = []
@@ -75,27 +76,60 @@ def parser_fortio_logs(file):
                     p = p[0]
                     case[1].setdefault(p[0]+p[2], p[3])
                     case[1][p[0]+p[2]] = max(p[3], case[1][p[0]+p[2]])
+                    continue
+                p = re.findall(r'(\S+) (\w+ mem) max ([\d\.]+)', i)
+                if p:
+                    p = p[0]
                 continue
             if 'cpu max' in i:
+                print(i)
                 p = re.findall(r'asm-(\w+)-1(.*) (\w+ cpu) max ([\d\.]+)', i)
                 if p:
                     p = p[0]
                     case[1].setdefault(p[0]+p[2], p[3])
                     case[1][p[0]+p[2]] = max(p[3], case[1][p[0]+p[2]])
+                    continue
+                p = re.findall(r'(\S+) (\d+\.\d+\.\d+\.\d+)topprocess cpu max ([\d\.]+)', i)
+                if p:
+                    p = p[0]
+                    case[1].setdefault(p[1], {})
+                    node=case[1][p[1]]
+                    node[p[0]]=p[2]
+                    continue
+                p = re.findall(r'total (\d+\.\d+\.\d+\.\d+)(\w+) cpu max ([\d\.]+)', i)
+                if p:
+                    p = p[0]
+                    case[1].setdefault(p[0], {})
+                    node=case[1][p[0]]
+                    node[p[1]]=p[2]
+
                 continue
             if 'Code' in i:
                 codes = re.findall(r'Code\s+(.+)\s+:\s+(\d+)', i)
                 case[0].setdefault("code", [])
                 case[0]["code"].append(codes)
                 continue
+            if re.match(r'^[^,]+,[^,]+,[^,]+$', i):
+                continue
             if start_print:
                 print(i)
     
-    print('errors', ['commands', 'rps', 'avg', 'p50', 'p75', 'p90', 'p99', 'p99.9', 'connections'], ['client', 'forward', 'server', 'client', 'forward', 'server', 'client', 'forward', 'server', 'client', 'forward', 'server'])
+    print('commands', 'errors')
     for c in case_list:
-        print(c[0], c[2:], 
-            [format(float(x), '.3f') for x in [c[1].get('clientfortio cpu', 0), c[1].get('forwordfortio cpu', 0),c[1].get('serverfortio cpu', 0),c[1].get('clientproxy cpu', 0), c[1].get('forwordproxy cpu', 0),c[1].get('serverproxy cpu', 0)]], 
-            [format(float(x)/1024/1024, '.2f') for x in [c[1].get('clientfortio mem', 0),c[1].get('forwordfortio mem', 0),c[1].get('serverfortio mem', 0),c[1].get('clientproxy mem', 0),c[1].get('forwordproxy mem', 0),c[1].get('serverproxy mem', 0)]])
+        print(c[2], c[0], c[1]) 
+    print(" \t".join(['keep', 'rps', 'avg', 'p50', 'p75', 'p90', 'p99', 'p99.9', 'connections', 'url']))
+    for c in case_list:
+        print(" \t".join([c[2][1]]+c[3:]+[c[2][0]]))
+    print(" \t".join(['client', 'forward', 'server', 'client', 'forward', 'server', 'client', 'forward', 'server', 'client', 'forward', 'server']))
+    for c in case_list:
+        print(" \t".join(
+            [format(float(x), '.3f') for x in [c[1].get('clientfortio cpu', 0), c[1].get('forwordfortio cpu', 0),c[1].get('serverfortio cpu', 0),c[1].get('clientproxy cpu', 0), c[1].get('forwordproxy cpu', 0),c[1].get('serverproxy cpu', 0)]] + 
+            [format(float(x)/1024/1024, '.2f') for x in [c[1].get('clientfortio mem', 0),c[1].get('forwordfortio mem', 0),c[1].get('serverfortio mem', 0),c[1].get('clientproxy mem', 0),c[1].get('forwordproxy mem', 0),c[1].get('serverproxy mem', 0)]]))
+    for c in case_list:
+        for node, v in c[1].items():
+            d_descending = sorted(v.items(), key=lambda kv: kv[1], reverse=True)
+            print(" \t".join(["node"] + [x[0] for x in d_descending]))
+            print(" \t".join([node]+[format(float(x[1]), '.2f') for x in d_descending]))
     
 base_name='perf-test'
 if len(sys.argv) > 1:

@@ -12,7 +12,7 @@ function createPod(){
     pod=${pod//NAMESPACE/${NAMESPACE}}
     pod=${pod//POD_IMAGE/${POD_IMAGE}}
     #curl -k -X POST -H "Content-Type:application/json" -H "X-Auth-Token:${token}" $endpoint/api/v1/namespaces/${NAMESPACE}/pods -d "${pod}" -s 2>&1 >> /tmp/curl-create-pod.log
-    echo $pod | kubectl create -f -
+    echo $pod | kubectl apply -f -
 }
 
 function createPods(){

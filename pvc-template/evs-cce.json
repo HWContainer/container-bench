@@ -3,7 +3,7 @@
     "kind": "PersistentVolumeClaim",
     "metadata": {
         "annotations": {
-            "everest.io/disk-volume-type": "SATA"
+            "everest.io/disk-volume-type": "SAS"
         },
         "labels": {
             "failure-domain.beta.kubernetes.io/zone": "AZ"
