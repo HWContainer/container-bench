@@ -11,9 +11,9 @@
         ],
         "resources": {
             "requests": {
-                "storage": "20Gi"
+                "storage": "100Gi"
             }
         },
-        "storageClassName": "alicloud-disk-essd"
+        "storageClassName": "alicloud-disk-available"
     }
 }

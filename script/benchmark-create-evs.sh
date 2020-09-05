@@ -9,9 +9,8 @@ PIPE_COUNT=20
 
 function createPvc(){
    id=$1
-    #curl -k -X POST -H "Content-Type:application/json" -H "X-Auth-Token:${token}" $endpoint/api/v1/namespaces/${NAMESPACE}/persistentvolumeclaims -d "${pod}" -s 2>&1 >> /tmp/curl-create-pvc.log
-    kubectl apply -f /tmp/pvcpvc$id/ --recursive
-    rm -rf /tmp/pvcpvc${id}
+   kubectl apply -f /tmp/pvcpvc$id/ --recursive
+   rm -rf /tmp/pvcpvc${id}
 }
 
 function gen_pod(){
@@ -24,7 +23,7 @@ function gen_pod(){
     echo $f_pod > /tmp/pvcpvc$f_id/${p_id}.json
 }
 
-function createPods(){
+function genPods(){
     j=1
     for i in $(seq 1 ${DEPLOY_NUM});do
         gen_pod $i $j
@@ -33,9 +32,17 @@ function createPods(){
             j=1
         fi
     done
-    for i in $(seq 1 $PIPE_COUNT);do
-        createPvc ${i} &
-    done
+}
+function createPods(){
+    if [[ $DEPLOY_NUM -gt $PIPE_COUNT ]]; then
+        for i in $(seq 1 $PIPE_COUNT);do
+            createPvc ${i} &
+        done
+    else
+        for i in $(seq 1 $DEPLOY_NUM);do
+            createPvc ${i} &
+        done
+    fi
 }
 
 function checkPodsCreate(){
@@ -94,6 +101,7 @@ done
 
 POD_TEMPLATE=`cat ${TEMPLATE_FILE} | sed "s/^[ \t]*//g"| sed ":a;N;s/\n//g;ta"`
 pod=${POD_TEMPLATE//NAMESPACE/${NAMESPACE}}
+genPods
 echo "Test start:              `date +%Y-%m-%d' '%H:%M:%S.%N`"
 createPods
 TOTAL_POD_NUM=$(( DEPLOY_NUM * 1 ))
