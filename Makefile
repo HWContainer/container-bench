@@ -251,10 +251,16 @@ eni100: ## create one deploy with 20 pod
 alievs = evs-ssd evs-topology evs-avaliable evs-efficiency evs-essd
 allevs: $(alievs) ## evs-ssd evs-topology evs-avaliable evs-efficiency evs-essd
 
-$(alievs): 
+$(alievs):clean
 	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/$@.json 
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test-evs_eni.json --image $(swr)/$(image)
-	prometheus_url=$(prometheus_url) bash $(current_dir)/script/run_fio.sh 2>logs/$@.log 1>&2
+	prometheus_url=$(prometheus_url) bash $(current_dir)/script/run_fio.sh 50G  2>logs/$@.log 1>&2
+
+oss:clean
+	bash $(current_dir)/script/benchmark-create-pv.sh --deploy-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/oss-pv.json
+	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/oss.json 
+	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test-evs_eni.json --image $(swr)/$(image)
+	prometheus_url=$(prometheus_url) bash $(current_dir)/script/run_fio.sh 100M 2>logs/$@.log 1>&2
 
 20evs: ## create 20 evs pvc
 	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 20 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/$(evs).json 
@@ -293,9 +299,13 @@ prepare_vm: ## prepare vm
 vm: ## test svc
 	prometheus_url=$(prometheus_url) bash $(current_dir)/script/run_fortio_in_vm.sh http://$(url) $(nodec) $(node) 2>logs/$(url).log 1>&2
 
-node_metric: ##
-	prometheus_url=$(prometheus_url) node_ip=$(nodem) bash $(current_dir)/script/get_node_metric.sh 2>logs/$(save).log 1>&2
+node_metric: clean##
+	prometheus_url=$(prometheus_url) node_ip=$(nodem) bash $(current_dir)/script/get_node_metric.sh 2>logs/$@.log 1>&2
+	make eni100
+	prometheus_url=$(prometheus_url) node_ip=$(nodem) bash $(current_dir)/script/get_node_metric.sh 2>>logs/$@.log 1>&2
 	
+throughput_metric: ##
+	prometheus_url=$(prometheus_url) run_network_throughput.sh 2>logs/$@.log 1>&2
 
 asm_latency_tests: asm_latency_http asm_latency_grpc
 

@@ -64,6 +64,14 @@ if len(sys.argv) == 4:
     node_cpu={'query': 'sum (1 - irate(node_cpu_seconds_total{instance="'+"{}:19101".format(host)+'", mode="idle"}[1m]))'}
     process_cpu={'query': 'sum(irate(namedprocess_namegroup_cpu_user_seconds_total{instance=~"'+"{}:9256".format(host)+'"}[1m])+irate(namedprocess_namegroup_cpu_system_seconds_total{instance="'+"{}:9256".format(host)+'"}[1m]))'}
     top_process_cpu={'query': 'topk(5,(sum(irate(namedprocess_namegroup_cpu_user_seconds_total{instance=~"'+"{}:9256".format(host)+'"}[1m])+irate(namedprocess_namegroup_cpu_system_seconds_total{instance=~"'+"{}:9256".format(host)+'"}[1m])) by (groupname)))'}
+    
+    process_mem={'query': 'sum(avg_over_time(namedprocess_namegroup_memory_bytes{memtype="swapped",instance=~"'+"{}:9256".format(host)+'"}[1m])+ ignoring (memtype) avg_over_time(namedprocess_namegroup_memory_bytes{memtype="resident",instance=~"'+"{}:9256".format(host)+'"}[1m]))'}
+    q = 'topk(5,(sum(avg_over_time(namedprocess_namegroup_memory_bytes{memtype="swapped",instance=~"' + \
+        "{}:9256".format(host) + \
+        '"}[1m]) + ignoring (memtype) avg_over_time(namedprocess_namegroup_memory_bytes{memtype="resident",instance=~"'\
+        + "{}:9256".format(host) \
+        + '"}[1m])) by(groupname)))'
+    top_process_mem={'query': q}
 
     node_cpu.update(params)
     get_metrics(host+'node cpu', node_cpu)
@@ -71,3 +79,7 @@ if len(sys.argv) == 4:
     get_metrics(host+'process cpu', process_cpu)
     top_process_cpu.update(params)
     get_metrics(host+'topprocess cpu', top_process_cpu)
+    process_mem.update(params)
+    get_metrics(host+'process mem', process_mem)
+    top_process_mem.update(params)
+    get_metrics(host+'topprocess mem', top_process_mem)
