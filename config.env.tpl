@@ -17,7 +17,11 @@ project=cn-north-4
 az=cn-north-4b
 control_plane=/root/.kube/config
 default_cluster=/root/.kube/config.c
-prometheus_url=
 cluster_list=
 
+prometheus_url=http://47.110.35.22:9090
 evs=evs-cce
+nfs=nfs-cce
+node=172.17.62.223
+nodec=47.110.70.89
+nodem=172.18.7.170

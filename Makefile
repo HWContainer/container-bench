@@ -70,7 +70,7 @@ cadvisor:
 	bash $(current_dir)/script/benchmark-create-ds.sh --pod-num 1 --name cadvisor-exporter --namespace $(namespace) --pod-template $(current_dir)/ds-template/cadvisor-exporter.json --image $(swr)/$(fortioimage)
 
 node:
-	bash $(current_dir)/script/benchmark-create-ds.sh --pod-num 1 --name process-exporter --namespace $(namespace) --pod-template $(current_dir)/ds-template/node-exporter.json --image $(swr)/$(nodeimage)
+	bash $(current_dir)/script/benchmark-create-ds.sh --pod-num 1 --name node-exporter --namespace $(namespace) --pod-template $(current_dir)/ds-template/node-exporter.json --image $(swr)/$(nodeimage)
 
 fortio:
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1 --name fortio --namespace $(namespace) --pod-template $(current_dir)/deploy-template/fortio.json --image $(swr)/$(fortioimage)
@@ -204,7 +204,7 @@ deploy1000: ## create one deploy with 1000 pod
 deploy2: ## create Two deploy with one pod
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 2 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test.json --image $(swr)/$(image)
 
-eni: ## create one deploy with 20 pod
+eni: ## create one deploy with 1 pod
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test_eni.json --image $(swr)/$(image)
 
 eni20: ## create one deploy with 20 pod
@@ -227,6 +227,12 @@ eni80: ## create one deploy with 20 pod
 
 eni100: ## create one deploy with 20 pod
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 100 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test_eni.json --image $(swr)/$(image)
+
+eni200: ## create one deploy with 20 pod
+	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 200 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test_eni.json --image $(swr)/$(image)
+
+eni400: ## create one deploy with 20 pod
+	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 400 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test_eni.json --image $(swr)/$(image)
 
 15deploy: ## create 20 deploy with pvc
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 15 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test-evs_eni.json --image $(swr)/$(image)
@@ -309,6 +315,18 @@ prepare_vm: ## prepare vm
 vm: ## test svc
 	prometheus_url=$(prometheus_url) bash $(current_dir)/script/run_fortio_in_vm.sh http://$(url) $(nodec) $(node) 2>logs/$(url).log 1>&2
 
+node_metric200: clean ## node_metric
+	prometheus_url=$(prometheus_url) node_ip=$(nodem) bash $(current_dir)/script/get_node_metric.sh 2>logs/$@.log 1>&2
+	make eni200
+	sleep 60
+	prometheus_url=$(prometheus_url) node_ip=$(nodem) bash $(current_dir)/script/get_node_metric.sh 2>>logs/$@.log 1>&2
+	
+node_metric400: clean ## node_metric
+	prometheus_url=$(prometheus_url) node_ip=$(nodem) bash $(current_dir)/script/get_node_metric.sh 2>logs/$@.log 1>&2
+	make eni400
+	sleep 60
+	prometheus_url=$(prometheus_url) node_ip=$(nodem) bash $(current_dir)/script/get_node_metric.sh 2>>logs/$@.log 1>&2
+	
 node_metric: clean ## node_metric
 	prometheus_url=$(prometheus_url) node_ip=$(nodem) bash $(current_dir)/script/get_node_metric.sh 2>logs/$@.log 1>&2
 	make eni100

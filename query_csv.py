@@ -61,7 +61,7 @@ if len(sys.argv) == 3:
 
 if len(sys.argv) == 4:
     host=sys.argv[3]
-    node_cpu={'query': 'sum (1 - irate(node_cpu_seconds_total{instance="'+"{}:19101".format(host)+'", mode="idle"}[1m]))'}
+    node_cpu={'query': 'sum (1 - irate(node_cpu_seconds_total{instance=~"'+"{}:.*".format(host)+'", mode="idle"}[1m]))'}
     process_cpu={'query': 'sum(irate(namedprocess_namegroup_cpu_user_seconds_total{instance=~"'+"{}:9256".format(host)+'"}[1m])+irate(namedprocess_namegroup_cpu_system_seconds_total{instance="'+"{}:9256".format(host)+'"}[1m]))'}
     top_process_cpu={'query': 'topk(5,(sum(irate(namedprocess_namegroup_cpu_user_seconds_total{instance=~"'+"{}:9256".format(host)+'"}[1m])+irate(namedprocess_namegroup_cpu_system_seconds_total{instance=~"'+"{}:9256".format(host)+'"}[1m])) by (groupname)))'}
     

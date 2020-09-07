@@ -20,7 +20,7 @@
                     "app": "POD_NAME"
                 },
                 "annotations": {
-                    "prometheus.io/port": "9256",
+                    "prometheus.io/port": "9101",
                     "prometheus.io/scrape": "true"
                 }
             },
