@@ -193,6 +193,7 @@ count: ## count node for each pod
 
 deploy1: ## create one deploy with one pod
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test.json --image $(swr)/$(image)
+	bash $(current_dir)/script/benchmark-create-svc.sh --deploy-num 1 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/svc-template/svc.json 
 
 deploy20: ## create one deploy with 20 pod
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 20 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test.json --image $(swr)/$(image)
@@ -256,6 +257,12 @@ $(alievs):clean
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test-evs_eni.json --image $(swr)/$(image)
 	prometheus_url=$(prometheus_url) bash $(current_dir)/script/run_fio.sh 50G  2>logs/$@.log 1>&2
 
+nfs-perf nfs-extreme:clean
+	bash $(current_dir)/script/benchmark-create-pv.sh --deploy-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/$@-pv.json
+	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/$@.json 
+	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test-evs_eni.json --image $(swr)/$(image)
+	prometheus_url=$(prometheus_url) bash $(current_dir)/script/run_fio.sh 100M 2>logs/$@.log 1>&2
+
 oss:clean
 	bash $(current_dir)/script/benchmark-create-pv.sh --deploy-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/oss-pv.json
 	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/oss.json 
@@ -280,6 +287,9 @@ oss:clean
 20nfs: ## create 20 nfs pvc
 	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 20 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/$(nfs).json 
 
+2svc2: ## create 2 svc for 2 deploy
+	bash $(current_dir)/script/benchmark-create-svc.sh --deploy-num 2 --pod-num 2 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/svc-template/svc.json 
+
 20svc: ## create 20 svc
 	bash $(current_dir)/script/benchmark-create-svc.sh --deploy-num 20 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/svc-template/svc.json 
 
@@ -299,13 +309,23 @@ prepare_vm: ## prepare vm
 vm: ## test svc
 	prometheus_url=$(prometheus_url) bash $(current_dir)/script/run_fortio_in_vm.sh http://$(url) $(nodec) $(node) 2>logs/$(url).log 1>&2
 
-node_metric: clean##
+node_metric: clean ## node_metric
 	prometheus_url=$(prometheus_url) node_ip=$(nodem) bash $(current_dir)/script/get_node_metric.sh 2>logs/$@.log 1>&2
 	make eni100
+	sleep 60
 	prometheus_url=$(prometheus_url) node_ip=$(nodem) bash $(current_dir)/script/get_node_metric.sh 2>>logs/$@.log 1>&2
 	
-throughput_metric: ##
-	prometheus_url=$(prometheus_url) run_network_throughput.sh 2>logs/$@.log 1>&2
+throughput_metric: deploy2 ##  throughput_metric
+	prometheus_url=$(prometheus_url) bash -x $(current_dir)/script/run_network_throughput.sh 2>logs/$@.log 1>&2
+
+pps_metric: deploy2 ##  pps_metric
+	prometheus_url=$(prometheus_url) bash -x $(current_dir)/script/run_network_pps.sh 2>logs/$@.log 1>&2
+
+connect_metric: deploy2 ##  connect_metric
+	prometheus_url=$(prometheus_url) bash -x $(current_dir)/script/run_network_connect.sh 2>logs/$@.log 1>&2
+
+service_metric: deploy1 fortio ##  service_metric
+	prometheus_url=$(prometheus_url) bash -x $(current_dir)/script/run_network_service_short.sh 2>logs/$@.log 1>&2
 
 asm_latency_tests: asm_latency_http asm_latency_grpc
 
