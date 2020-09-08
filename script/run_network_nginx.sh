@@ -10,10 +10,9 @@ sleep 30
 currentTimeStamp=`date +%s.%2N`
 python query_csv.py $prometheus_url $currentTimeStamp $nodeserver_ip
 python query_csv.py $prometheus_url $currentTimeStamp $nodeclient_ip
-sleep 30
 
 currentTimeStamp=`date +%s.%2N`
-kubectl exec $podclient_name -- /usr/bin/fortio load -qps 0 -c 64 -t 120s --keepalive=false http://$podserver_ip
+kubectl exec $podclient_name -- /usr/bin/fortio load -qps 0 -c 64 -t 120s  http://$podserver_ip
 
 python query_csv.py $prometheus_url $currentTimeStamp $nodeserver_ip
 python query_csv.py $prometheus_url $currentTimeStamp $nodeclient_ip

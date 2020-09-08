@@ -11,10 +11,9 @@
         ],
         "resources": {
             "requests": {
-                "storage": "100Gi"
+                "storage": "10240Gi"
             }
         },
-        "storageClassName": "nas",
-        "selector": {"matchLabels":{"alicloud-pvname": "pvc-EVS_PVC_NAME"}}
+        "storageClassName": "csi-nas"
     }
 }

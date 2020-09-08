@@ -1,0 +1,28 @@
+{
+    "apiVersion": "v1",
+    "kind": "PersistentVolume",
+    "metadata": {
+        "name": "pv-EVS_PVC_NAME"
+    },
+    "spec": {
+        "accessModes": [
+            "ReadWriteMany"
+        ],
+        "capacity": {
+            "storage": "500Gi"
+        },
+        "csi": {
+            "driver": "sfsturbo.csi.everest.io",
+            "fsType": "nfs",
+            "volumeAttributes": {
+                "everest.io/share-export-location": "192.168.25.156:/",
+                "everest.io/share-volume-type": "PERFORMANCE",
+                "storage.kubernetes.io/csiProvisionerIdentity": "everest-csi-provisioner"
+            },
+            "volumeHandle": "c0be9334-2261-484d-9f50-b9d75dc288dd"
+        },
+        "persistentVolumeReclaimPolicy": "Delete",
+        "storageClassName": "csi-sfsturbo",
+        "volumeMode": "Filesystem"
+    }
+}

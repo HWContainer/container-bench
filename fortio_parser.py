@@ -2,9 +2,27 @@ import os
 import re
 import sys
 from collections import OrderedDict
+def dump(keys, items, file_name=None):
+    data = [keys]
+    data = data + items
+    longest_cols = [
+        (max([len(str(row[i])) for row in data]) + 3)
+        for i in range(len(data[0]))
+    ]
+    row_format = "".join(["{:<" + str(longest_col) + "}" for longest_col in longest_cols])
+    if file_name is None:
+        for row in data:
+            print(row_format.format(*row))
+    else:
+        with open(file_name, 'w') as f:
+            for row in data:
+                f.write(row_format.format(*row))
+                f.write("\n")
+
 def parser_fortio_logs(file):
     case_list = []
-    case = []
+    case = [{}, {}, ("-","-")] + ['-']*8
+    case_list.append(case)
     start_print = False
     with open(file, 'r') as f:
         for i in f.readlines():
@@ -46,6 +64,12 @@ def parser_fortio_logs(file):
                 start_print = True
                 continue
     
+            if 'Starting 1 process' in i:
+                case = [{}, {}]
+                case.extend([('-', '-')])
+                case_list.append(case)
+                # start_print = True
+                continue
             if 'Ended after' in i:
                 qps = re.findall(r'qps=([^\s]+)', i)
                 case.extend(qps)
@@ -82,7 +106,6 @@ def parser_fortio_logs(file):
                     p = p[0]
                 continue
             if 'cpu max' in i:
-                print(i)
                 p = re.findall(r'asm-(\w+)-1(.*) (\w+ cpu) max ([\d\.]+)', i)
                 if p:
                     p = p[0]
@@ -111,30 +134,41 @@ def parser_fortio_logs(file):
                 continue
             if re.match(r'^[^,]+,[^,]+,[^,]+$', i):
                 continue
+            if 'write: io=' in i:
+                iops=re.findall(r'\w+: io.*, bw=(.*), iops=(\d+)', i)
+                case.extend(iops)
+                continue
+            if 'read : io=' in i:
+                iops=re.findall(r'\w+\s*: io.*, bw=(.*), iops=(\d+)', i)
+                case.extend(iops)
+                continue
+            if 'lat (' in i:
+                lat=re.findall(r'\s+lat\s*\((\w+)\)\s*:\s*(min=\d+.*)', i)
+                if lat:
+                    case.extend(lat)
+                continue
             if start_print:
                 print(i)
     
     print('commands', 'errors')
     for c in case_list:
-        print(c[2], c[0], c[1]) 
-    print(" \t".join(['keep', 'rps', 'avg', 'p50', 'p75', 'p90', 'p99', 'p99.9', 'connections', 'url']))
-    for c in case_list:
-        print(" \t".join([c[2][1]]+c[3:]+[c[2][0]]))
-    print(" \t".join(['client', 'forward', 'server', 'client', 'forward', 'server', 'client', 'forward', 'server', 'client', 'forward', 'server']))
-    for c in case_list:
-        print(" \t".join(
-            [format(float(x), '.3f') for x in [c[1].get('clientfortio cpu', 0), c[1].get('forwordfortio cpu', 0),c[1].get('serverfortio cpu', 0),c[1].get('clientproxy cpu', 0), c[1].get('forwordproxy cpu', 0),c[1].get('serverproxy cpu', 0)]] + 
-            [format(float(x)/1024/1024, '.2f') for x in [c[1].get('clientfortio mem', 0),c[1].get('forwordfortio mem', 0),c[1].get('serverfortio mem', 0),c[1].get('clientproxy mem', 0),c[1].get('forwordproxy mem', 0),c[1].get('serverproxy mem', 0)]]))
+        print(c[2], c[0]) 
+    dump(['keep', 'rps', 'avg', 'p50', 'p75', 'p90', 'p99', 'p99.9', 'connections', 'url'], [[c[2][1]]+c[3:]+[''] * (8 - len(c[3:]))+[c[2][0]] for c in case_list])
+    dump(['client', 'forward', 'server', 'client', 'forward', 'server', 'client', 'forward', 'server', 'client', 'forward', 'server'], [[format(float(x), '.3f') for x in [c[1].get('clientfortio cpu', 0), c[1].get('forwordfortio cpu', 0),c[1].get('serverfortio cpu', 0),c[1].get('clientproxy cpu', 0), c[1].get('forwordproxy cpu', 0),c[1].get('serverproxy cpu', 0)]] + [format(float(x)/1024/1024, '.2f') for x in [c[1].get('clientfortio mem', 0),c[1].get('forwordfortio mem', 0),c[1].get('serverfortio mem', 0),c[1].get('clientproxy mem', 0),c[1].get('forwordproxy mem', 0),c[1].get('serverproxy mem', 0)]] for c in case_list])
+    keys = []
     for c in case_list:
         for node, v in c[1].items():
-            d_descending = sorted(v.items(), key=lambda kv: kv[1], reverse=True)
-            print(" \t".join(["node"] + [x[0] for x in d_descending]))
-            print(" \t".join([node]+[format(float(x[1]), '.2f') for x in d_descending]))
+            keys += v.keys()
+    keys=list(set(keys))
+    dump(["nodename"]+keys, sorted([[node]+ [format(float(kv.get(k,'0')), ".2f") for k in keys] for c in case_list for node, kv in c[1].items()], key=lambda x: x[0]))
     
 base_name='perf-test'
 if len(sys.argv) > 1:
     base_name=sys.argv[1]
-    parser_fortio_logs(os.path.join("logs", base_name))
+    if os.path.isfile(base_name):
+        parser_fortio_logs(base_name)
+    else:
+        parser_fortio_logs(os.path.join("logs", base_name))
 else:
     for f in os.listdir('logs'):
         print(f)

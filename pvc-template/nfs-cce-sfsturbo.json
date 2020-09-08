@@ -2,8 +2,7 @@
     "apiVersion": "v1",
     "kind": "PersistentVolumeClaim",
     "metadata": {
-        "name": "EVS_PVC_NAME",
-        "namespace": "NAMESPACE"
+        "name": "EVS_PVC_NAME"
     },
     "spec": {
         "accessModes": [
@@ -11,10 +10,10 @@
         ],
         "resources": {
             "requests": {
-                "storage": "100Gi"
+                "storage": "500Gi"
             }
         },
-        "storageClassName": "nas",
-        "selector": {"matchLabels":{"alicloud-pvname": "pvc-EVS_PVC_NAME"}}
+        "storageClassName": "csi-sfsturbo",
+        "volumeName": "pv-EVS_PVC_NAME"
     }
 }

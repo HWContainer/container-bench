@@ -255,15 +255,15 @@ eni400: ## create one deploy with 20 pod
 20deploy100: ## create 20 deploy with pvc total 100 pod
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 20 --pod-num 5 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test-evs_eni.json --image $(swr)/$(image)
 
-alievs = evs-ssd evs-topology evs-avaliable evs-efficiency evs-essd
-allevs: $(alievs) ## evs-ssd evs-topology evs-avaliable evs-efficiency evs-essd
+alievs = evs-ssd evs-topology evs-avaliable evs-efficiency evs-essd evs-cce-ssd nfs-cce-perf
+allevs: $(alievs) ## evs-ssd evs-topology evs-avaliable evs-efficiency evs-essd evs-cce-ssd nfs-cce-perf
 
 $(alievs):clean
 	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/$@.json 
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test-evs_eni.json --image $(swr)/$(image)
 	prometheus_url=$(prometheus_url) bash $(current_dir)/script/run_fio.sh 50G  2>logs/$@.log 1>&2
 
-nfs-perf nfs-extreme:clean
+nfs-cce-sfsturbo-perf nfs-cce-sfsturbo nfs-perf nfs-extreme:clean
 	bash $(current_dir)/script/benchmark-create-pv.sh --deploy-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/$@-pv.json
 	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/$@.json 
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test-evs_eni.json --image $(swr)/$(image)
@@ -307,13 +307,13 @@ event: ## get events and pods
 	kubectl get events -ojson -n $(namespace) > /tmp/curl-get-event.log
 
 test: ## test svc
-	prometheus_url=$(prometheus_url) bash $(current_dir)/script/run_svc_fortio.sh $(namespace) http://$(url) 2>logs/$(url).log 1>&2
+	prometheus_url=$(prometheus_url) bash $(current_dir)/script/run_svc_fortio.sh $(namespace) http://$(url) 2>logs/podto$(url).log 1>&2
 
 prepare_vm: ## prepare vm
 	cat $(current_dir)/script/prepare_vm.sh | sshpass -p Huawei@123 ssh -oStrictHostKeyChecking=no root@$(nodec) bash -s $(swr)/$(fortioimage) $(swr)/$(nodeimage) $(swr)/$(processimage) $(node)
 
 vm: ## test svc
-	prometheus_url=$(prometheus_url) bash $(current_dir)/script/run_fortio_in_vm.sh http://$(url) $(nodec) $(node) 2>logs/$(url).log 1>&2
+	prometheus_url=$(prometheus_url) bash $(current_dir)/script/run_fortio_in_vm.sh http://$(url) $(nodec) $(node) 2>logs/vmto$(url).log 1>&2
 
 node_metric200: clean ## node_metric
 	prometheus_url=$(prometheus_url) node_ip=$(nodem) bash $(current_dir)/script/get_node_metric.sh 2>logs/$@.log 1>&2
@@ -345,10 +345,6 @@ connect_metric: deploy2 ##  connect_metric
 service_metric: deploy1 fortio ##  service_metric
 	prometheus_url=$(prometheus_url) bash -x $(current_dir)/script/run_network_service_short.sh 2>logs/$@.log 1>&2
 
-asm_latency_tests: asm_latency_http asm_latency_grpc
+pod_metric: deploy1 fortio ##  pod_metric
+	prometheus_url=$(prometheus_url) bash -x $(current_dir)/script/run_network_nginx.sh 2>logs/$@.log 1>&2
 
-asm_latency_http:
-	default_cluster=$(default_cluster) bash -x $(current_dir)/script/asm_latency_http.sh $(namespace) http://$(url) 2>logs/$(url)_http.log 1>&2
-
-asm_latency_grpc:
-	default_cluster=$(default_cluster) bash -x $(current_dir)/script/asm_latency_grpc.sh $(namespace) http://$(url) 2>logs/$(url)_grpc.log 1>&2
