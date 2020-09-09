@@ -11,7 +11,7 @@ function createPod(){
     pod=${POD_TEMPLATE//POD_NAME/${podName}}
     pod=${pod//NAMESPACE/${NAMESPACE}}
     pod=${pod//POD_IMAGE/${POD_IMAGE}}
-    #curl -k -X POST -H "Content-Type:application/json" -H "X-Auth-Token:${token}" $endpoint/api/v1/namespaces/${NAMESPACE}/pods -d "${pod}" -s 2>&1 >> /tmp/curl-create-pod.log
+    #curl -k -X POST -H "Content-Type:application/json" -H "X-Auth-Token:${token}" $endpoint/api/v1/namespaces/${NAMESPACE}/pods -d "${pod}" -s 2>&1 >> curl-create-pod.log
     echo $pod | kubectl apply -f -
 }
 
@@ -46,8 +46,8 @@ function checkPodsRunning(){
 }
 
 function getCostEach(){
-    kubectl get events -ojson -n ${NAMESPACE} > /tmp/curl-get-event.log
-    kubectl get pods -ojson -n ${NAMESPACE} > /tmp/curl-get-pods.log
+    kubectl get events -ojson -n ${NAMESPACE} > curl-get-event.log
+    kubectl get pods -ojson -n ${NAMESPACE} > curl-get-pods.log
 }
 
 SCRIPT=$(basename $0)
@@ -93,7 +93,7 @@ while test $# -gt 0; do
         esac
 done
 POD_TEMPLATE=`cat ${TEMPLATE_FILE} | sed "s/^[ \t]*//g"| sed ":a;N;s/\n//g;ta"`
-date +%Y-%m-%d' '%H:%M:%S > /tmp/begin
+date +%Y-%m-%d' '%H:%M:%S > begin
 echo "Test start:              `date +%Y-%m-%d' '%H:%M:%S.%N`"
 createPods
 checkPodsCreate

@@ -9,8 +9,8 @@ PIPE_COUNT=20
 
 function createDeploy(){
     id=$1
-    kubectl apply -f /tmp/dsds$id/ --recursive
-    rm -rf /tmp/dsds${id}
+    kubectl apply -f dsds$id/ --recursive
+    rm -rf dsds${id}
 }
 function gen_pod(){
     p_id=$1
@@ -18,8 +18,8 @@ function gen_pod(){
     podName="${BASE_NAME}-${p_id}"
     f_pod=${pod//POD_NAME/${podName}}
     f_pod=${f_pod//EVS_PVC_NAME/${podName}}
-    mkdir -p /tmp/dsds$f_id
-    echo $f_pod > /tmp/dsds$f_id/${p_id}.json
+    mkdir -p dsds$f_id
+    echo $f_pod > dsds$f_id/${p_id}.json
 }
 
 function genPods(){
@@ -59,7 +59,7 @@ function checkPodsRunning(){
     scheduled=0
     running=0
     while [[ ${finishedPods} -ne ${TOTAL_POD_NUM} ]];do
-        if [[ -f /tmp/debug ]]; then
+        if [[ -f debug ]]; then
             echo ${finishedPods} ${TOTAL_POD_NUM}
         fi
         first=${outarray[0]}
@@ -103,8 +103,8 @@ function checkPodsRunning(){
 }
 
 function getCostEach(){
-    kubectl get events -ojson -n ${NAMESPACE} > /tmp/curl-get-event.log
-    kubectl get pods -ojson -n ${NAMESPACE} > /tmp/curl-get-pods.log
+    kubectl get events -ojson -n ${NAMESPACE} > curl-get-event.log
+    kubectl get pods -ojson -n ${NAMESPACE} > curl-get-pods.log
 }
 
 function getPingServer(){
@@ -166,7 +166,7 @@ pod=${pod//PINGSERVER/${PINGSERVER}}
 pod=${pod//POD_NUM/${POD_NUM}}
 pod=${pod//POD_IMAGE/${POD_IMAGE}}
 genPods
-#date +%Y-%m-%d' '%H:%M:%S > /tmp/begin
+#date +%Y-%m-%d' '%H:%M:%S > begin
 echo "Test start:              `date +%Y-%m-%d' '%H:%M:%S.%N`"
 createPods
 TOTAL_POD_NUM=$(( DEPLOY_NUM * POD_NUM ))

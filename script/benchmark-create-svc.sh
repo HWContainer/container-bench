@@ -9,8 +9,8 @@ PIPE_COUNT=20
 
 function createDeploy(){
     id=$1
-    kubectl apply -f /tmp/svcsvc$id/ --recursive
-    rm -rf /tmp/svcsvc${id}
+    kubectl apply -f svcsvc$id/ --recursive
+    rm -rf svcsvc${id}
 }
 function gen_pod(){
     p_id=$1
@@ -20,8 +20,8 @@ function gen_pod(){
     deployName="${BASE_NAME}-${d_idx}"
     f_pod=${pod//POD_NAME/${deployName}}
     f_pod=${f_pod//SVC_NAME/${svcName}}
-    mkdir -p /tmp/svcsvc$f_id
-    echo $f_pod > /tmp/svcsvc$f_id/${p_id}.json
+    mkdir -p svcsvc$f_id
+    echo $f_pod > svcsvc$f_id/${p_id}.json
 }
 
 function createPods(){
@@ -70,7 +70,7 @@ function checkPodsRunning(){
     outarray=(1 2 4 8 16 32 64 128 256 512 1024 2048)
     finalarray=(8 4 2 1 0)
     while [[ ${finishedPods} -ne ${TOTAL_POD_NUM} ]];do
-        if [[ -f /tmp/debug ]]; then
+        if [[ -f debug ]]; then
             echo ${finishedPods} ${TOTAL_POD_NUM}
         fi
         first=${outarray[0]}

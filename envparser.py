@@ -44,22 +44,22 @@ def from_json(k, j):
     return j_a[0]
   return j_a
 
-with open('/tmp/begin', 'r') as f:
+with open('begin', 'r') as f:
   begin=f.read().strip()
   begin_tm=time.mktime(datetime.datetime.strptime(begin, "%Y-%m-%d %H:%M:%S").timetuple())
 
-with open('/tmp/curl-get-event.log', 'r') as f:
+with open('curl-get-event.log', 'r') as f:
   string=f.read()
   strJson = "".join([ string.strip().rsplit("}" , 1)[0] ,  "}"] )  
   json_data=json.loads(strJson)
 
-with open('/tmp/curl-get-pods.log', 'r') as f:
+with open('curl-get-pods.log', 'r') as f:
   string=f.read()
   strJson = "".join([ string.strip().rsplit("}" , 1)[0] ,  "}"] )  
   pod_data=json.loads(strJson)
 
 logs={}
-with open('/tmp/curl-get-realstart.log', 'r') as f:
+with open('curl-get-realstart.log', 'r') as f:
   for l in f:
     runtothrough=re.findall("^[^\s]+\s+[^\s]+\s+([^\s]+\s+[^\s]+)\s+Check ([^\s]+).*success take: (\d+\.\d+)", l)
     if runtothrough:

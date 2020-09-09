@@ -322,7 +322,7 @@ oss:clean
 
 event: ## get events and pods
 	bash $(current_dir)/script/get_pods_logs.sh $(namespace)
-	kubectl get events -ojson -n $(namespace) > /tmp/curl-get-event.log
+	kubectl get events -ojson -n $(namespace) > curl-get-event.log
 
 test: ## test svc
 	prometheus_url=$(prometheus_url) bash $(current_dir)/script/run_svc_fortio.sh $(namespace) http://$(url) 2>logs/podto$(url).log 1>&2
