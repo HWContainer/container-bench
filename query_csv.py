@@ -46,8 +46,8 @@ def get_metrics(t, params):
         podname=result['metric'].get('pod_name', result['metric'].get('groupname', 'total'))
         for l in result['values']:
         	writer.writerow([podname]+l)
-        print("{} {} max {}".format(podname, t, max([l[1] for l in result['values']])))
-        #print("".format(max([l[1] for l in result['values']])))
+        print("{} {} max {}".format(podname, t, max([float(l[1]) for l in result['values']])))
+        #print("".format(max([float(l[1]) for l in result['values']])))
 
 if len(sys.argv) == 3:
     fortio_cpu.update(params)
@@ -61,9 +61,9 @@ if len(sys.argv) == 3:
 
 if len(sys.argv) == 4:
     host=sys.argv[3]
-    node_cpu={'query': 'sum (1 - irate(node_cpu_seconds_total{instance=~"'+"{}:.*".format(host)+'", mode="idle"}[1m]))'}
-    process_cpu={'query': 'sum(irate(namedprocess_namegroup_cpu_user_seconds_total{instance=~"'+"{}:9256".format(host)+'"}[1m])+irate(namedprocess_namegroup_cpu_system_seconds_total{instance="'+"{}:9256".format(host)+'"}[1m]))'}
-    top_process_cpu={'query': 'topk(5,(sum(irate(namedprocess_namegroup_cpu_user_seconds_total{instance=~"'+"{}:9256".format(host)+'"}[1m])+irate(namedprocess_namegroup_cpu_system_seconds_total{instance=~"'+"{}:9256".format(host)+'"}[1m])) by (groupname)))'}
+    node_cpu={'query': 'sum (rate(node_cpu_seconds_total{instance=~"'+"{}:.*".format(host)+'", mode!="idle"}[1m]))'}
+    process_cpu={'query': 'sum(rate(namedprocess_namegroup_cpu_user_seconds_total{instance=~"'+"{}:9256".format(host)+'"}[1m])+rate(namedprocess_namegroup_cpu_system_seconds_total{instance="'+"{}:9256".format(host)+'"}[1m]))'}
+    top_process_cpu={'query': 'topk(5,(sum(rate(namedprocess_namegroup_cpu_user_seconds_total{instance=~"'+"{}:9256".format(host)+'"}[1m])+rate(namedprocess_namegroup_cpu_system_seconds_total{instance=~"'+"{}:9256".format(host)+'"}[1m])) by (groupname)))'}
     
     process_mem={'query': 'sum(avg_over_time(namedprocess_namegroup_memory_bytes{memtype="swapped",instance=~"'+"{}:9256".format(host)+'"}[1m])+ ignoring (memtype) avg_over_time(namedprocess_namegroup_memory_bytes{memtype="resident",instance=~"'+"{}:9256".format(host)+'"}[1m]))'}
     q = 'topk(5,(sum(avg_over_time(namedprocess_namegroup_memory_bytes{memtype="swapped",instance=~"' + \

@@ -234,6 +234,24 @@ eni200: ## create one deploy with 20 pod
 eni400: ## create one deploy with 20 pod
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 400 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test_eni.json --image $(swr)/$(image)
 
+eni600: ## create one deploy with 20 pod
+	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 600 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test_eni.json --image $(swr)/$(image)
+
+eni1200: ## create one deploy with 20 pod
+	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1200 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test_eni.json --image $(swr)/$(image)
+
+eni1800: ## create one deploy with 20 pod
+	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1800 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test_eni.json --image $(swr)/$(image)
+
+eni2400: ## create one deploy with 20 pod
+	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 2400 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test_eni.json --image $(swr)/$(image)
+
+eni3000: ## create one deploy with 20 pod
+	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 3000 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test_eni.json --image $(swr)/$(image)
+
+eni3600: ## create one deploy with 20 pod
+	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 3600 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test_eni.json --image $(swr)/$(image)
+
 15deploy: ## create 20 deploy with pvc
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 15 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test-evs_eni.json --image $(swr)/$(image)
 

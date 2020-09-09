@@ -71,7 +71,7 @@ def mean(numbers):
 
 events = {}
 for j in json_data['items']:
-  if base_name in from_json('metadata.name', j) and from_json('involvedObject.kind', j) not in ['ReplicaSet', 'PodGroup', 'Deployment', 'Ingress']: # and 'perf-test-10-mork-1' in from_json('metadata.name', j):
+  if base_name in from_json('metadata.name', j) and from_json('involvedObject.kind', j) not in ['Endpoints', 'ReplicaSet', 'PodGroup', 'Deployment', 'Ingress']: # and 'perf-test-10-mork-1' in from_json('metadata.name', j):
     #scheduled not record print(from_json('lastTimestamp', j))
     last_time=from_json('lastTimestamp', j)
     if last_time is None:
@@ -104,6 +104,7 @@ for j in pod_data['items']:
 arr = []
 for k, e in events.items():
   #print(k)
+  #print(e)
   #print('|'.join(["{}|{}".format(x['reason'], x['delta']) for x in sorted(e+pods[k], key=lambda x: x['delta'])]))
   arr.append({x['reason']:x['delta'] for x in e+pods[k]+logs.get(k, [])})
 arr = [a for a in arr if 'Scheduled' in a ]

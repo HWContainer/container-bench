@@ -70,6 +70,13 @@ def parser_fortio_logs(file):
                 case_list.append(case)
                 # start_print = True
                 continue
+
+            if 'python query_csv.py' in i:
+                case = [{}, {}]
+                case.extend([('-', '-')])
+                case_list.append(case)
+                # start_print = True
+                continue
             if 'Ended after' in i:
                 qps = re.findall(r'qps=([^\s]+)', i)
                 case.extend(qps)
@@ -101,9 +108,14 @@ def parser_fortio_logs(file):
                     case[1].setdefault(p[0]+p[2], p[3])
                     case[1][p[0]+p[2]] = max(p[3], case[1][p[0]+p[2]])
                     continue
-                p = re.findall(r'(\S+) (\w+ mem) max ([\d\.]+)', i)
+                p = re.findall(r'(total) (\d+\.\d+\.\d+\.\d+)\w+ mem max ([\d\.]+)', i)
                 if p:
                     p = p[0]
+                    print(p)
+                    case[1].setdefault(p[1], {})
+                    node=case[1][p[1]]
+                    node[p[0]+'mem']=p[2]
+                    continue
                 continue
             if 'cpu max' in i:
                 p = re.findall(r'asm-(\w+)-1(.*) (\w+ cpu) max ([\d\.]+)', i)
