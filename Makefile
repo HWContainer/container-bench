@@ -54,6 +54,10 @@ moreimage: ## build image special l layer and c size
 server: ## create a server for ping
 	bash $(current_dir)/script/benchmark-create-pod.sh --pod-num 1 --name perf-server --namespace $(namespace) --pod-template $(current_dir)/pod-template/pod.json --image $(swr)/$(serverimage)
         
+cache: ## cache images
+	. $(current_dir)/script/get_token.sh; \
+	bash $(current_dir)/script/cache_image.sh $(swr)/$(serverimage)
+
 metrics: ## create a grafana and process-exporter
 	make monit; make process; make cadvisor; make node
 
