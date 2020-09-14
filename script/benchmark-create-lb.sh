@@ -16,7 +16,7 @@ function gen_pod(){
     p_id=$1
     f_id=$2
     d_idx=$3
-    svcName="${BASE_NAME}-${p_id}"
+    svcName="${BASE_NAME}-${p_id}-lb-auto"
     deployName="${BASE_NAME}-${d_idx}"
     f_pod=${pod//POD_NAME/${deployName}}
     f_pod=${f_pod//SVC_NAME/${svcName}}
@@ -49,6 +49,15 @@ function createPods(){
     fi
 }
 
+function checkPodsRunning(){
+    finishedPods=0
+    while [[ ${finishedPods} -ne ${TOTAL_POD_NUM} ]];do
+        finishedPods=`kubectl -n ${NAMESPACE} get svc | grep ${BASE_NAME}|grep lb-auto| grep -v "NAME" | grep -v "pending" | wc -l`
+    done
+    echo "All svc OK:        `date +%Y-%m-%d' '%H:%M:%S.%N`"
+}
+
+
 SCRIPT=$(basename $0)
 while test $# -gt 0; do
     case $1 in
@@ -61,6 +70,7 @@ while test $# -gt 0; do
             echo "     --pod-num             set pods number to create. Default: 500"
             echo "     --name                set pod base name, will use this name and id to generate pod name. Default: sina-test"
             echo "     --namespace           set namespace to create pod, this namespace should already created. Default: sina-test"
+            echo "     --flavor              set flavor to create svc. Default: "
             echo "     --pod-template        the file path of pod template in json format"
             echo ""
             exit 0
@@ -75,6 +85,10 @@ while test $# -gt 0; do
             ;;
         --pod-template)
             TEMPLATE_FILE=${2}
+            shift 2
+            ;;
+        --flavor)
+            FLAVOR=${2}
             shift 2
             ;;
         --pod-num)
@@ -95,7 +109,10 @@ done
 POD_TEMPLATE=`cat ${TEMPLATE_FILE} | sed "s/^[ \t]*//g"| sed ":a;N;s/\n//g;ta"`
 pod=${POD_TEMPLATE//NAMESPACE/${NAMESPACE}}
 pod=${pod//POD_NUM/${POD_NUM}}
+pod=${pod//FLAVOR/${FLAVOR}}
 echo "Test start:              `date +%Y-%m-%d' '%H:%M:%S.%N`"
 createPods
+TOTAL_POD_NUM=$(( DEPLOY_NUM * 1 ))
+checkPodsRunning
 sleep 1
 echo "Test finished:           `date +%Y-%m-%d' '%H:%M:%S.%N`"

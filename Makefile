@@ -17,8 +17,6 @@ help: ## This help.
 
 .DEFAULT_GOAL := help
 
-test_ddd: 
-	clean4
 
 image: ## build image
 	docker build -f $(current_dir)/Dockerfile.image -t $(swr)/$(image) $(current_dir)/script
@@ -194,6 +192,8 @@ count: ## count node for each pod
 deploy1: ## create one deploy with one pod
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test.json --image $(swr)/$(image)
 	bash $(current_dir)/script/benchmark-create-svc.sh --deploy-num 1 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/svc-template/svc.json 
+	bash $(current_dir)/script/benchmark-create-svc.sh --deploy-num 1 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/svc-template/svc-nodeport-local.json 
+	bash $(current_dir)/script/benchmark-create-svc.sh --deploy-num 1 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/svc-template/svc-nodeport-cluster.json 
 
 deploy20: ## create one deploy with 20 pod
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 20 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test.json --image $(swr)/$(image)
@@ -273,15 +273,23 @@ eni3600: ## create one deploy with 20 pod
 20deploy100: ## create 20 deploy with pvc total 100 pod
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 20 --pod-num 5 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test-evs_eni.json --image $(swr)/$(image)
 
-alievs = evs-ssd evs-topology evs-avaliable evs-efficiency evs-essd evs-cce-ssd nfs-cce-perf
-allevs: $(alievs) ## evs-ssd evs-topology evs-avaliable evs-efficiency evs-essd evs-cce-ssd nfs-cce-perf
+alievs = evs-ssd evs-topology evs-avaliable evs-efficiency evs-essd evs-cce-ssd nfs-cce-perf 
+allevs: $(alievs) ## evs-ssd evs-topology evs-avaliable evs-efficiency evs-essd evs-cce-ssd nfs-cce-perf 
+
+alobs = obs-cce-obfs obs-cce-s3fs obs-cce-warm
+cceobs: $(alobs) ## obs-cce-obfs obs-cce-s3fs obs-cce-warm
 
 $(alievs):clean
 	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/$@.json 
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test-evs_eni.json --image $(swr)/$(image)
 	prometheus_url=$(prometheus_url) bash $(current_dir)/script/run_fio.sh 50G  2>logs/$@.log 1>&2
 
-nfs-cce-sfsturbo-perf nfs-cce-sfsturbo nfs-perf nfs-extreme:clean
+$(alobs):clean
+	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/$@.json 
+	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test-evs_eni.json --image $(swr)/$(image)
+	prometheus_url=$(prometheus_url) bash $(current_dir)/script/run_fio.sh 100M 2>logs/$@.log 1>&2
+
+nfs-cce-sfsturbo-perf nfs-cce-sfsturbo nfs-perf nfs-extreme:clean ## nfs-cce-sfsturbo-perf nfs-cce-sfsturbo nfs-perf nfs-extreme
 	bash $(current_dir)/script/benchmark-create-pv.sh --deploy-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/$@-pv.json
 	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/$@.json 
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test-evs_eni.json --image $(swr)/$(image)
@@ -325,13 +333,33 @@ event: ## get events and pods
 	kubectl get events -ojson -n $(namespace) > /tmp/curl-get-event.log
 
 test: ## test svc
-	prometheus_url=$(prometheus_url) bash $(current_dir)/script/run_svc_fortio.sh $(namespace) http://$(url) 2>logs/podto$(url).log 1>&2
+	prometheus_url=$(prometheus_url) bash $(current_dir)/script/run_fortio_in_container.sh $(namespace) http://$(url) 2>logs/podto$(url).log 1>&2
+
+call_pod_test: ## test
+	url=`kubectl get pods -n $(namespace) --selector app=perf-test-1 -o jsonpath='{.items[0].status.podIP}'` make test
+
+call_svc_test:
+	url=perf-test-1 make test
 
 prepare_vm: ## prepare vm
 	cat $(current_dir)/script/prepare_vm.sh | sshpass -p Huawei@123 ssh -oStrictHostKeyChecking=no root@$(nodec) bash -s $(swr)/$(fortioimage) $(swr)/$(nodeimage) $(swr)/$(processimage) $(node)
 
 vm: ## test svc
 	prometheus_url=$(prometheus_url) bash $(current_dir)/script/run_fortio_in_vm.sh http://$(url) $(nodec) $(node) 2>logs/vmto$(url).log 1>&2
+
+call_node_cluster_aff_same: ## call node port cluster affinity same node
+	url=`kubectl get pods -n $(namespace) --selector app=perf-test-1 -o jsonpath='{.items[0].status.hostIP}'`:`kubectl get svc perf-test-1-nodeport-cluster -n $(namespace) -o jsonpath="{.spec.ports[0].nodePort}"` make vm
+
+call_node_local_aff_same: ## call node port node affinity same node
+	url=`kubectl get pods -n $(namespace) --selector app=perf-test-1 -o jsonpath='{.items[0].status.hostIP}'`:`kubectl get svc perf-test-1-nodeport-local -n $(namespace) -o jsonpath="{.spec.ports[0].nodePort}"` make vm
+
+alielbs = slb.s1.small slb.s2.small slb.s2.medium slb.s3.small slb.s3.medium slb.s3.large
+alllbs: $(alielbs) ## slb.s1.small slb.s2.small slb.s2.medium slb.s3.small slb.s3.medium slb.s3.large
+$(alielbs):
+	bash $(current_dir)/script/benchmark-create-lb.sh --deploy-num 1 --pod-num 1 --name perf-test --namespace $(namespace) --flavor $@ --pod-template $(current_dir)/svc-template/$(lb).json
+	url=`kubectl get svc perf-test-1-lb-auto -ojsonpath='{.status.loadBalancer.ingress[0].ip}'` make vm
+	kubectl delete svc perf-test-1-lb-auto
+	
 
 node_metric200: clean ## node_metric
 	prometheus_url=$(prometheus_url) node_ip=$(nodem) bash $(current_dir)/script/get_node_metric.sh 2>logs/$@.log 1>&2
@@ -360,9 +388,13 @@ pps_metric: deploy2 ##  pps_metric
 connect_metric: deploy2 ##  connect_metric
 	prometheus_url=$(prometheus_url) bash -x $(current_dir)/script/run_network_connect.sh 2>logs/$@.log 1>&2
 
+run_network_lat: deploy2 ##  connect_metric
+	prometheus_url=$(prometheus_url) bash -x $(current_dir)/script/run_network_lat.sh 2>logs/$@.log 1>&2
+
 service_metric: deploy1 fortio ##  service_metric
 	prometheus_url=$(prometheus_url) bash -x $(current_dir)/script/run_network_service_short.sh 2>logs/$@.log 1>&2
 
 pod_metric: deploy1 fortio ##  pod_metric
 	prometheus_url=$(prometheus_url) bash -x $(current_dir)/script/run_network_nginx.sh 2>logs/$@.log 1>&2
 
+container_invoke: call_pod_test call_svc_test service_metric pod_metric ## call_pod_test call_svc_test service_metric pod_metric
