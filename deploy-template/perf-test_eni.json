@@ -31,7 +31,7 @@
       "spec": {
         "containers": [
           {
-            "command": ["sh", "-c", "/bin/bash check-network.sh PINGSERVER; sed -i 's/access_log.*/access_log off;/g' /etc/nginx/nginx.conf; nginx -g 'daemon off;'"],
+            "command": ["sh", "-c", "/bin/bash check-network.sh PINGSERVER;sed -i 's/worker_connections.*;/worker_connections  65535;/g' /etc/nginx/nginx.conf; sed -i 's/worker_processes.*;/worker_processes  8;/g' /etc/nginx/nginx.conf; sed -i 's/access_log.*/access_log off;/g' /etc/nginx/nginx.conf; nginx -g 'daemon off;'"],
             "env": [
               {
                 "name": "MYPODNAME",

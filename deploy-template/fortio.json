@@ -33,6 +33,11 @@
           {
             "image": "POD_IMAGE",
             "imagePullPolicy": "IfNotPresent",
+            "args": [
+              "server",
+              "--http-port",
+              "0.0.0.0:80"
+            ],
             "name": "container-0",
             "resources": {
               "requests": {
