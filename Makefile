@@ -191,6 +191,7 @@ count: ## count node for each pod
 
 deploy1: ## create one deploy with one pod
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test.json --image $(swr)/$(image)
+	#bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/fortio.json --image $(swr)/$(fortioimage)
 	bash $(current_dir)/script/benchmark-create-svc.sh --deploy-num 1 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/svc-template/svc.json 
 	bash $(current_dir)/script/benchmark-create-svc.sh --deploy-num 1 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/svc-template/svc-nodeport-local.json 
 	bash $(current_dir)/script/benchmark-create-svc.sh --deploy-num 1 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/svc-template/svc-nodeport-cluster.json 
@@ -333,31 +334,31 @@ event: ## get events and pods
 	kubectl get events -ojson -n $(namespace) > /tmp/curl-get-event.log
 
 test: ## test svc
-	prometheus_url=$(prometheus_url) bash $(current_dir)/script/run_fortio_in_container.sh $(namespace) http://$(url) 2>logs/podto$(url).log 1>&2
+	prometheus_url=$(prometheus_url) bash $(current_dir)/script/run_fortio_in_container.sh $(namespace) http://$(url) 2>logs/podto_${prefix}_$(url).log 1>&2
 
 call_pod_test: ## test
-	url=`kubectl get pods -n $(namespace) --selector app=perf-test-1 -o jsonpath='{.items[0].status.podIP}'` make test
+	prefix="pod" url=`kubectl get pods -n $(namespace) --selector app=perf-test-1 -o jsonpath='{.items[0].status.podIP}'` make test
 
 call_svc_test:
-	url=perf-test-1 make test
+	prefix="svc" url=perf-test-1 make test
 
 prepare_vm: ## prepare vm
 	cat $(current_dir)/script/prepare_vm.sh | sshpass -p Huawei@123 ssh -oStrictHostKeyChecking=no root@$(nodec) bash -s $(swr)/$(fortioimage) $(swr)/$(nodeimage) $(swr)/$(processimage) $(node)
 
 vm: ## test svc
-	prometheus_url=$(prometheus_url) bash $(current_dir)/script/run_fortio_in_vm.sh http://$(url) $(nodec) $(node) 2>logs/vmto$(url).log 1>&2
+	prometheus_url=$(prometheus_url) bash $(current_dir)/script/run_fortio_in_vm.sh http://$(url) $(nodec) $(node) $(qps) 2>logs/vmto_${prefix}_$(url).log 1>&2
 
 call_node_cluster_aff_same: ## call node port cluster affinity same node
-	url=`kubectl get pods -n $(namespace) --selector app=perf-test-1 -o jsonpath='{.items[0].status.hostIP}'`:`kubectl get svc perf-test-1-nodeport-cluster -n $(namespace) -o jsonpath="{.spec.ports[0].nodePort}"` make vm
+	url=`kubectl get pods -n $(namespace) --selector app=perf-test-1 -o jsonpath='{.items[0].status.hostIP}'`:`kubectl get svc perf-test-1-nodeport-cluster -n $(namespace) -o jsonpath="{.spec.ports[0].nodePort}"` prefix='nodeport_cluster_aff_same' qps=1000 make vm
 
 call_node_local_aff_same: ## call node port node affinity same node
-	url=`kubectl get pods -n $(namespace) --selector app=perf-test-1 -o jsonpath='{.items[0].status.hostIP}'`:`kubectl get svc perf-test-1-nodeport-local -n $(namespace) -o jsonpath="{.spec.ports[0].nodePort}"` make vm
+	url=`kubectl get pods -n $(namespace) --selector app=perf-test-1 -o jsonpath='{.items[0].status.hostIP}'`:`kubectl get svc perf-test-1-nodeport-local -n $(namespace) -o jsonpath="{.spec.ports[0].nodePort}"` prefix='nodeport_local_aff' qps=1000 make vm
 
 alielbs = slb.s1.small slb.s2.small slb.s2.medium slb.s3.small slb.s3.medium slb.s3.large
 alllbs: $(alielbs) ## slb.s1.small slb.s2.small slb.s2.medium slb.s3.small slb.s3.medium slb.s3.large
 $(alielbs):
 	bash $(current_dir)/script/benchmark-create-lb.sh --deploy-num 1 --pod-num 1 --name perf-test --namespace $(namespace) --flavor $@ --pod-template $(current_dir)/svc-template/$(lb).json
-	url=`kubectl get svc perf-test-1-lb-auto -ojsonpath='{.status.loadBalancer.ingress[0].ip}'` make vm
+	url=`kubectl get svc perf-test-1-lb-auto -ojsonpath='{.status.loadBalancer.ingress[0].ip}'` prefix=$@ qps=1000 make vm
 	kubectl delete svc perf-test-1-lb-auto
 	
 
