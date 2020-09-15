@@ -77,6 +77,13 @@ def parser_fortio_logs(file):
                 case_list.append(case)
                 # start_print = True
                 continue
+
+            if 'name,timestamp' in i and 'node cpu' in i:
+                case = [{}, {}]
+                case.extend([('-', '-')])
+                case_list.append(case)
+                # start_print = True
+                continue
             if 'Ended after' in i:
                 qps = re.findall(r'qps=([^\s]+)', i)
                 case.extend(qps)
