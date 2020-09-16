@@ -171,9 +171,15 @@ def parser_fortio_logs(file):
     
     print('commands', 'errors')
     for c in case_list:
-        print(c[2], c[0]) 
-    dump(['keep', 'rps', 'avg', 'p50', 'p75', 'p90', 'p99', 'p99.9', 'connections', 'url'], [[c[2][1]]+c[3:]+[''] * (8 - len(c[3:]))+[c[2][0]] for c in case_list])
-    dump(['client', 'forward', 'server', 'client', 'forward', 'server', 'client', 'forward', 'server', 'client', 'forward', 'server'], [[format(float(x), '.3f') for x in [c[1].get('clientfortio cpu', 0), c[1].get('forwordfortio cpu', 0),c[1].get('serverfortio cpu', 0),c[1].get('clientproxy cpu', 0), c[1].get('forwordproxy cpu', 0),c[1].get('serverproxy cpu', 0)]] + [format(float(x)/1024/1024, '.2f') for x in [c[1].get('clientfortio mem', 0),c[1].get('forwordfortio mem', 0),c[1].get('serverfortio mem', 0),c[1].get('clientproxy mem', 0),c[1].get('forwordproxy mem', 0),c[1].get('serverproxy mem', 0)]] for c in case_list])
+        if c[0]:
+            print(c[2], c[0], c[1]) 
+    dump(['keep', 'rps', 'avg', 'p50', 'p75', 'p90', 'p99', 'p99.9', 'connections', 'url'], [[c[2][1]]+c[3:]+[''] * (8 - len(c[3:]))+[c[2][0]] for c in case_list if c[0]])
+    asms = []
+    for c in case_list:
+        if 'serverfortio mem' in c[1].keys():
+           asms.append([format(float(x), '.3f') for x in [c[1].get('clientfortio cpu', 0), c[1].get('forwordfortio cpu', 0),c[1].get('serverfortio cpu', 0),c[1].get('clientproxy cpu', 0), c[1].get('forwordproxy cpu', 0),c[1].get('serverproxy cpu', 0)]] + [format(float(x)/1024/1024, '.2f') for x in [c[1].get('clientfortio mem', 0),c[1].get('forwordfortio mem', 0),c[1].get('serverfortio mem', 0),c[1].get('clientproxy mem', 0),c[1].get('forwordproxy mem', 0),c[1].get('serverproxy mem', 0)]])
+    if asms:
+        dump(['client', 'forward', 'server', 'client', 'forward', 'server', 'client', 'forward', 'server', 'client', 'forward', 'server'], asms)
     keys = []
     for c in case_list:
         for node, v in c[1].items():
