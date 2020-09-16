@@ -21,6 +21,7 @@ def dump(keys, items, file_name=None):
 
 def parser_fortio_logs(file):
     case_list = []
+    # errors, metrics, (url, connect), latency
     case = [{}, {}, ("-","-")] + ['-']*8
     case_list.append(case)
     start_print = False
@@ -84,6 +85,8 @@ def parser_fortio_logs(file):
                 case_list.append(case)
                 # start_print = True
                 continue
+            if 'latency' in i or '_lat:' in i or 'msg_rate' in i or '[SUM]' in i or 'pps  RX:' in i:
+                print(i.strip())
             if 'Ended after' in i:
                 qps = re.findall(r'qps=([^\s]+)', i)
                 case.extend(qps)
@@ -115,10 +118,16 @@ def parser_fortio_logs(file):
                     case[1].setdefault(p[0]+p[2], p[3])
                     case[1][p[0]+p[2]] = max(p[3], case[1][p[0]+p[2]])
                     continue
+                p = re.findall(r'(\S+) (\d+\.\d+\.\d+\.\d+)topprocess mem max ([\d\.]+)', i)
+                if p:
+                    p = p[0]
+                    case[1].setdefault(p[1], {})
+                    node=case[1][p[1]]
+                    node[p[0]+'mem']=p[2]
+                    continue
                 p = re.findall(r'(total) (\d+\.\d+\.\d+\.\d+)\w+ mem max ([\d\.]+)', i)
                 if p:
                     p = p[0]
-                    print(p)
                     case[1].setdefault(p[1], {})
                     node=case[1][p[1]]
                     node[p[0]+'mem']=p[2]
@@ -183,9 +192,16 @@ def parser_fortio_logs(file):
     keys = []
     for c in case_list:
         for node, v in c[1].items():
-            keys += v.keys()
+            keys += [k for k in v.keys() if 'mem' not in k ]
     keys=list(set(keys))
     dump(["nodename"]+keys, sorted([[node]+ [format(float(kv.get(k,'0')), ".2f") for k in keys] for c in case_list for node, kv in c[1].items()], key=lambda x: x[0]))
+
+    keys = []
+    for c in case_list:
+        for node, v in c[1].items():
+            keys += [k for k in v.keys() if 'mem' in k ]
+    keys=list(set(keys))
+    dump(["nodename"]+keys, sorted([[node]+ [format(float(kv.get(k,'0'))/1024/1024, ".2f") for k in keys] for c in case_list for node, kv in c[1].items()], key=lambda x: x[0]))
     
 base_name='perf-test'
 if len(sys.argv) > 1:

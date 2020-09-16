@@ -168,11 +168,11 @@ clean3:
 
 clean2:
 	kubectl get pods -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep 'perf-hostnetwork'|xargs -i kubectl delete pod -n $(namespace) --ignore-not-found=true --wait=true {}
-	kubectl get svc -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep 'perf-test'|xargs -i kubectl delete svc -n $(namespace) --ignore-not-found=true --wait=true {}
 
 clean: ## clean deploy pod and pvc
 	echo "Clean start:              `date +%Y-%m-%d' '%H:%M:%S.%N`"
-	kubectl get deploy -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep 'perf-test'|xargs -i kubectl delete deploy -n $(namespace) --wait=true {}
+	kubectl get svc -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep 'perf-test'|xargs -i kubectl delete svc -n $(namespace) --ignore-not-found=true --wait=true {}
+	kubectl get deploy -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep -e 'perf-test' -e 'fortio'|xargs -i kubectl delete deploy -n $(namespace) --wait=true {}
 	kubectl get pods -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep 'perf-test'|xargs -i kubectl delete pod -n $(namespace) --ignore-not-found=true --wait=true {}
 	kubectl get pvc -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep 'perf-test'|xargs -i kubectl delete pvc -n $(namespace) --ignore-not-found=true --wait=true {}
 	kubectl get pv -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep 'perf-test'|xargs -i kubectl delete pv --ignore-not-found=true --wait=true {}
@@ -398,4 +398,5 @@ service_metric: deploy1 fortio ##  service_metric
 pod_metric: deploy1 fortio ##  pod_metric
 	prometheus_url=$(prometheus_url) bash -x $(current_dir)/script/run_network_nginx.sh 2>logs/$@.log 1>&2
 
-container_invoke: call_pod_test call_svc_test service_metric pod_metric ## call_pod_test call_svc_test service_metric pod_metric
+container_invoke: call_pod_test call_svc_test pod_metric service_metric ## call_pod_test call_svc_test service_metric pod_metric
+l4test: run_network_lat pps_metric throughput_metric connect_metric ## run_network_lat pps_metric throughput_metric connect_metric
