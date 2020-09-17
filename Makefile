@@ -380,6 +380,9 @@ node_metric: clean ## node_metric
 	sleep 60
 	prometheus_url=$(prometheus_url) node_ip=$(nodem) bash $(current_dir)/script/get_node_metric.sh 2>>logs/$@.log 1>&2
 	
+svc_metric: deploy2 ## svc_metric
+	prometheus_url=$(prometheus_url) node_ip=$(nodem) namespace=$(namespace) bash $(current_dir)/script/run_svc.sh 2>logs/$@.log 1>&2
+
 throughput_metric: deploy2 ##  throughput_metric
 	prometheus_url=$(prometheus_url) bash -x $(current_dir)/script/run_network_throughput.sh 2>logs/$@.log 1>&2
 
