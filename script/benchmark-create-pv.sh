@@ -9,8 +9,8 @@ PIPE_COUNT=20
 
 function createPvc(){
    id=$1
-    kubectl apply -f /tmp/pvpv$id/ --recursive
-    rm -rf /tmp/pvpv${id}
+    kubectl apply -f pvpv$id/ --recursive
+    rm -rf pvpv${id}
 }
 
 function gen_pod(){
@@ -19,8 +19,8 @@ function gen_pod(){
     podName="${BASE_NAME}-${p_id}"
     f_pod=${pod//EVS_PVC_NAME/${podName}}
     f_pod=${f_pod//AZ/${az}}
-    mkdir -p /tmp/pvpv$f_id
-    echo $f_pod > /tmp/pvpv$f_id/${p_id}.json
+    mkdir -p pvpv$f_id
+    echo $f_pod > pvpv$f_id/${p_id}.json
 }
 
 function genPods(){

@@ -171,7 +171,7 @@ clean2:
 
 clean: ## clean deploy pod and pvc
 	echo "Clean start:              `date +%Y-%m-%d' '%H:%M:%S.%N`"
-	kubectl get svc -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep 'perf-test'|xargs -i kubectl delete svc -n $(namespace) --ignore-not-found=true --wait=true {}
+	#kubectl get svc -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep 'perf-test'|xargs -i kubectl delete svc -n $(namespace) --ignore-not-found=true --wait=true {}
 	kubectl get deploy -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep -e 'perf-test' -e 'fortio'|xargs -i kubectl delete deploy -n $(namespace) --wait=true {}
 	kubectl get pods -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep 'perf-test'|xargs -i kubectl delete pod -n $(namespace) --ignore-not-found=true --wait=true {}
 	kubectl get pvc -n $(namespace) -o=jsonpath='{.items[*].metadata.name}'|tr ' ' '\n'|grep 'perf-test'|xargs -i kubectl delete pvc -n $(namespace) --ignore-not-found=true --wait=true {}
@@ -331,7 +331,7 @@ oss:clean
 
 event: ## get events and pods
 	bash $(current_dir)/script/get_pods_logs.sh $(namespace)
-	kubectl get events -ojson -n $(namespace) > /tmp/curl-get-event.log
+	kubectl get events -ojson -n $(namespace) > curl-get-event.log
 
 test: ## test svc
 	prometheus_url=$(prometheus_url) bash $(current_dir)/script/run_fortio_in_container.sh $(namespace) http://$(url) 2>logs/podto_${prefix}_$(url).log 1>&2
