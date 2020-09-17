@@ -400,3 +400,19 @@ pod_metric: deploy1 fortio ##  pod_metric
 
 container_invoke: call_pod_test call_svc_test pod_metric service_metric ## call_pod_test call_svc_test service_metric pod_metric
 l4test: run_network_lat pps_metric throughput_metric connect_metric ## run_network_lat pps_metric throughput_metric connect_metric
+ccestoragetest: ## evs-cce-ssd nfs-cce-perf nfs-cce-sfsturbo-perf nfs-cce-sfsturbo obs-cce-obfs obs-cce-s3fs obs-cce-warm 
+	#make evs-cce-ssd
+	#make clean
+	#make nfs-cce-perf
+	#make clean
+	make nfs-cce-sfsturbo-perf
+	make clean
+	make nfs-cce-sfsturbo
+	make clean
+	make obs-cce-obfs
+	make clean
+	make obs-cce-s3fs
+	make clean
+	make obs-cce-warm
+	make clean
+

@@ -85,8 +85,10 @@ def parser_fortio_logs(file):
                 case_list.append(case)
                 # start_print = True
                 continue
-            if 'latency' in i or '_lat:' in i or 'msg_rate' in i or '[SUM]' in i or 'pps  RX:' in i:
+            if 'latency' in i or '_lat:' in i or 'msg_rate' in i or '[SUM]' in i or 'pps  RX:' in i or \
+                ('io=' in i and ('read' in i or 'write' in i)) or ('lat' in i and 'min' in i and 'clat' not in i and 'slat' not in i):
                 print(i.strip())
+            
             if 'Ended after' in i:
                 qps = re.findall(r'qps=([^\s]+)', i)
                 case.extend(qps)
