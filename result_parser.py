@@ -26,7 +26,13 @@ def parser_fortio_logs(file):
     case_list.append(case)
     start_print = False
     quickout=0
-    with open(file, 'r', encoding='utf-8', errors='ignore') as f:
+    if sys.version_info >= (3, 0):
+        args=(file, 'r')
+        kwargs={'encoding':'utf-8', 'errors':'ignore'}
+    else:
+        args=(file, 'r')
+        kwargs={}
+    with open(*args, **kwargs) as f:
         for i in f.readlines():
             if 'EOF at first read' in i:
                 continue
