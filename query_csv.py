@@ -1,12 +1,16 @@
 import csv
 #import requests
-import httplib
 import sys
-import urllib
+try:
+    import httplib
+    from urlparse import urlparse
+    from urllib import urlencode
+except ModuleNotFoundError as e:
+    import http.client as httplib
+    from urllib.parse import urlparse
+    from urllib.parse import urlencode
 import json
 import time
-from urlparse import urlparse
-from urllib import urlencode
 
 """
 A simple program to print the result of a Prometheus query as CSV.

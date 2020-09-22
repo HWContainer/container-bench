@@ -25,6 +25,7 @@ def parser_fortio_logs(file):
     case = [{}, {}, ("-","-")] + ['-']*8
     case_list.append(case)
     start_print = False
+    quickout=0
     with open(file, 'r') as f:
         for i in f.readlines():
             if 'EOF at first read' in i:
@@ -88,7 +89,15 @@ def parser_fortio_logs(file):
             if 'latency' in i or '_lat:' in i or 'msg_rate' in i or '[SUM]' in i or 'pps  RX:' in i or \
                 ('io=' in i and ('read' in i or 'write' in i)) or ('lat' in i and 'min' in i and 'clat' not in i and 'slat' not in i):
                 print(i.strip())
-            
+                continue
+            if quickout == 1:
+                print(i.strip())
+                quickout=0
+                continue
+            if 'con_collect.sh' in i:
+                print(i.strip())
+                quickout=1
+                continue
             if 'Ended after' in i:
                 qps = re.findall(r'qps=([^\s]+)', i)
                 case.extend(qps)

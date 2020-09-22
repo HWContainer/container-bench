@@ -83,7 +83,8 @@ for j in json_data['items']:
       continue
     #print(from_json('reason', j).decode('utf-8').encode('utf-8'), from_json('lastTimestamp', j))
     events.setdefault(from_json('involvedObject.name', j), []).append(
-      {'delta': last_tm-begin_tm, 'lastTimestamp': last_time, 'reason': from_json('reason', j).decode('utf-8').encode('utf-8')})
+      #{'delta': last_tm-begin_tm, 'lastTimestamp': last_time, 'reason': from_json('reason', j).decode('utf-8').encode('utf-8')})
+      {'delta': last_tm-begin_tm, 'lastTimestamp': last_time, 'reason': from_json('reason', j)})
 
 pods = {}
 for j in pod_data['items']:
