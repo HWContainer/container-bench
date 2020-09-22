@@ -401,8 +401,24 @@ service_metric: deploy1 fortio ##  service_metric
 pod_metric: deploy1 fortio ##  pod_metric
 	prometheus_url=$(prometheus_url) bash -x $(current_dir)/script/run_network_nginx.sh 2>logs/$@.log 1>&2
 
-container_invoke: call_pod_test call_svc_test pod_metric service_metric ## call_pod_test call_svc_test service_metric pod_metric
-l4test: run_network_lat pps_metric throughput_metric connect_metric ## run_network_lat pps_metric throughput_metric connect_metric
+container_invoke: ## call_pod_test call_svc_test service_metric pod_metric
+	make call_pod_test
+	sleep 120
+	make call_svc_test
+	sleep 120
+	make pod_metric
+	sleep 120
+	make service_metric
+	sleep 120
+l4test: ## run_network_lat pps_metric throughput_metric connect_metric
+	make run_network_lat
+	sleep 120
+	make pps_metric
+	sleep 120
+	make throughput_metric
+	sleep 120
+	make connect_metric
+	sleep 120
 ccestoragetest: ## evs-cce-ssd nfs-cce-perf nfs-cce-sfsturbo-perf nfs-cce-sfsturbo obs-cce-obfs obs-cce-s3fs obs-cce-warm 
 	#make evs-cce-ssd
 	#make clean
