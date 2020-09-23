@@ -16,7 +16,7 @@ password=
 project=cn-north-4
 az=cn-north-4b
 control_plane=/root/.kube/config
-default_cluster=/root/.kube/config.c
+default_cluster=/root/.kube/config
 cluster_list=
 
 prometheus_url=http://47.110.35.22:9090
