@@ -354,12 +354,17 @@ call_node_cluster_aff_same: ## call node port cluster affinity same node
 call_node_local_aff_same: ## call node port node affinity same node
 	url=`kubectl get pods -n $(namespace) --selector app=perf-test-1 -o jsonpath='{.items[0].status.hostIP}'`:`kubectl get svc perf-test-1-nodeport-local -n $(namespace) -o jsonpath="{.spec.ports[0].nodePort}"` prefix='nodeport_local_aff' qps=1000 make vm
 
+call_ingress: ## call ingress from node
+	url=`kubectl get ingress ingress -ojsonpath='{.status.loadBalancer.ingress[0].ip}'` prefix='ingress' qps=1000 make vm
+
 alielbs = slb.s1.small slb.s2.small slb.s2.medium slb.s3.small slb.s3.medium slb.s3.large
 alllbs: $(alielbs) ## slb.s1.small slb.s2.small slb.s2.medium slb.s3.small slb.s3.medium slb.s3.large
 $(alielbs):
 	bash $(current_dir)/script/benchmark-create-lb.sh --deploy-num 1 --pod-num 1 --name perf-test --namespace $(namespace) --flavor $@ --pod-template $(current_dir)/svc-template/$(lb).json
+	sleep 120
 	url=`kubectl get svc perf-test-1-lb-auto -ojsonpath='{.status.loadBalancer.ingress[0].ip}'` prefix=$@ qps=1000 make vm
 	kubectl delete svc perf-test-1-lb-auto
+	sleep 60
 	
 
 node_metric200: clean ## node_metric
