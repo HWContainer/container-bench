@@ -5,23 +5,23 @@ currentTimeStamp=`date +%s.%2N`
 sleep 30
 python query_csv.py $prometheus_url $currentTimeStamp $node_ip
 currentTimeStamp=`date +%s.%2N`
-kubectl exec $pod_name -- /home/paas/fio -ioengine=libaio -group_reporting -direct=1 -rw=write -bs=1024k -iodepth=32 -size=$size -name=/tmp/evs0/kd4kqzfc/fiotest
+kubectl exec $pod_name -- /home/paas/fio -ioengine=libaio --randrepeat=1 --fallocate=none -direct=1 -rw=write -bs=1024k -iodepth=32 -size=$size -name=test --filename=/tmp/evs0/kd4kqzfc/fiotest
 sleep 30
 python query_csv.py $prometheus_url $currentTimeStamp $node_ip
 currentTimeStamp=`date +%s.%2N`
-kubectl exec $pod_name -- /home/paas/fio -ioengine=libaio -group_reporting -direct=1 -rw=randwrite -bs=4k -iodepth=32 -numjobs=1 -runtime=180  -time_based -size=$size -name=/tmp/evs0/kd4kqzfc/fiotest
+kubectl exec $pod_name -- /home/paas/fio -ioengine=libaio --randrepeat=1 --fallocate=none -direct=1 -rw=randwrite -bs=4k -iodepth=32 -runtime=120 -time_based -name=test --filename=/tmp/evs0/kd4kqzfc/fiotest
 sleep 30
 python query_csv.py $prometheus_url $currentTimeStamp $node_ip
 currentTimeStamp=`date +%s.%2N`
-kubectl exec $pod_name -- /home/paas/fio -ioengine=libaio -group_reporting -direct=1 -rw=randread -bs=4k -iodepth=32 -numjobs=1 -runtime=180 -time_based -size=$size -name=/tmp/evs0/kd4kqzfc/fiotest
+kubectl exec $pod_name -- /home/paas/fio -ioengine=libaio --randrepeat=1 --fallocate=none -direct=1 -rw=randread -bs=4k -iodepth=32 -runtime=120 -time_based -name=test --filename=/tmp/evs0/kd4kqzfc/fiotest
 sleep 30
 python query_csv.py $prometheus_url $currentTimeStamp $node_ip
 currentTimeStamp=`date +%s.%2N`
-kubectl exec $pod_name -- /home/paas/fio -ioengine=libaio -group_reporting -direct=1 -rw=write -bs=1024k -iodepth=32 -runtime=180 -time_based -size=$size -name=/tmp/evs0/kd4kqzfc/fiotest
+kubectl exec $pod_name -- /home/paas/fio -ioengine=libaio --randrepeat=1 --fallocate=none -direct=1 -rw=write -bs=1024k -iodepth=32 -runtime=120 -time_based -name=test --filename=/tmp/evs0/kd4kqzfc/fiotest
 sleep 30
 python query_csv.py $prometheus_url $currentTimeStamp $node_ip
 currentTimeStamp=`date +%s.%2N`
-kubectl exec $pod_name -- /home/paas/fio -ioengine=libaio -group_reporting -direct=1 -rw=read -bs=1024k -iodepth=32 -runtime=180 -time_based -size=$size -name=/tmp/evs0/kd4kqzfc/fiotest
+kubectl exec $pod_name -- /home/paas/fio -ioengine=libaio --randrepeat=1 --fallocate=none -direct=1 -rw=read -bs=1024k -iodepth=32 -runtime=120 -time_based -name=test --filename=/tmp/evs0/kd4kqzfc/fiotest
 sleep 30
 python query_csv.py $prometheus_url $currentTimeStamp $node_ip
 
