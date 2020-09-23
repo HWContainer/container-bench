@@ -288,19 +288,19 @@ $(alievs):clean
 $(alobs):clean
 	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/$@.json 
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test-evs_eni.json --image $(swr)/$(image)
-	prometheus_url=$(prometheus_url) bash $(current_dir)/script/run_fio.sh 100M 2>logs/$@.log 1>&2
+	prometheus_url=$(prometheus_url) bash $(current_dir)/script/run_fio.sh 50G 2>logs/$@.log 1>&2
 
 nfs-cce-sfsturbo-perf nfs-cce-sfsturbo nfs-perf nfs-extreme:clean ## nfs-cce-sfsturbo-perf nfs-cce-sfsturbo nfs-perf nfs-extreme
 	bash $(current_dir)/script/benchmark-create-pv.sh --deploy-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/$@-pv.json
 	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/$@.json 
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test-evs_eni.json --image $(swr)/$(image)
-	prometheus_url=$(prometheus_url) bash $(current_dir)/script/run_fio.sh 100M 2>logs/$@.log 1>&2
+	prometheus_url=$(prometheus_url) bash $(current_dir)/script/run_fio.sh 50G 2>logs/$@.log 1>&2
 
 oss:clean
 	bash $(current_dir)/script/benchmark-create-pv.sh --deploy-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/oss-pv.json
 	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/oss.json 
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test-evs_eni.json --image $(swr)/$(image)
-	prometheus_url=$(prometheus_url) bash $(current_dir)/script/run_fio.sh 100M 2>logs/$@.log 1>&2
+	prometheus_url=$(prometheus_url) bash $(current_dir)/script/run_fio.sh 50G 2>logs/$@.log 1>&2
 
 20evs: ## create 20 evs pvc
 	bash $(current_dir)/script/benchmark-create-evs.sh --deploy-num 20 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/pvc-template/$(evs).json 
