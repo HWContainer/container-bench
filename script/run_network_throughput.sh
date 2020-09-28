@@ -12,11 +12,11 @@ python query_csv.py $prometheus_url $currentTimeStamp $nodeserver_ip
 python query_csv.py $prometheus_url $currentTimeStamp $nodeclient_ip
 
 currentTimeStamp=`date +%s.%2N`
-kubectl exec $podserver_name -- sh -c '/home/paas/iperf -s &'
+kubectl exec $podserver_name -- sh -c '/home/paas/iperf -s >/log.iperf 2>&1 &'
 kubectl exec $podclient_name -- /home/paas/iperf -c $podserver_ip -P 10 -t 120
 
 python query_csv.py $prometheus_url $currentTimeStamp $nodeserver_ip
 python query_csv.py $prometheus_url $currentTimeStamp $nodeclient_ip
 
-kubectl exec $podserver_name -- pkill iperf
+kubectl exec $podserver_name -- sh -c 'pkill iperf; cat /log.iperf'
 

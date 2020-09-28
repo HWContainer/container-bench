@@ -15,7 +15,7 @@ python query_csv.py $prometheus_url $currentTimeStamp $nodeclient_ip
 
 
 currentTimeStamp=`date +%s.%2N`
-kubectl exec $podserver_name -- sh -c 'cd /home/paas; ./qperf &'
+kubectl exec $podserver_name -- sh -c 'cd /home/paas; ./qperf >/log.qperf 2>&1 &'
 kubectl exec $podclient_name -- sh -c 'cd /home/paas; bash ./lat_qperf.sh '$podserver_ip
 sleep 120
 
