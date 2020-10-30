@@ -205,6 +205,9 @@ deploy1000: ## create one deploy with 1000 pod
 deploy2: ## create Two deploy with one pod
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 2 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test.json --image $(swr)/$(image)
 
+host2: ## create Two deploy with one pod
+	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 2 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test-hostnetwork.json --image $(swr)/$(image)
+
 eni: ## create one deploy with 1 pod
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --deploy-num 1 --pod-num 1 --name perf-test --namespace $(namespace) --pod-template $(current_dir)/deploy-template/perf-test_eni.json --image $(swr)/$(image)
 
@@ -392,8 +395,8 @@ node_metric: clean ## node_metric
 svc_metric: deploy2 ## svc_metric
 	prometheus_url=$(prometheus_url) node_ip=$(nodem) namespace=$(namespace) bash $(current_dir)/script/run_svc.sh 2>logs/$@.log 1>&2
 
-throughput_metric: deploy2 ##  throughput_metric
-	prometheus_url=$(prometheus_url) bash -x $(current_dir)/script/run_network_throughput.sh 2>logs/$@.log 1>&2
+throughput_metric: ##  throughput_metric
+	FAST=$(FAST) prometheus_url=$(prometheus_url) bash -x $(current_dir)/script/run_network_throughput.sh 2>logs/$@.log 1>&2
 
 pps_metric: deploy2 ##  pps_metric
 	prometheus_url=$(prometheus_url) bash -x $(current_dir)/script/run_network_pps.sh 2>logs/$@.log 1>&2

@@ -1,0 +1,72 @@
+{
+  "apiVersion": "apps/v1",
+  "kind": "Deployment",
+  "metadata": {
+    "name": "POD_NAME",
+    "namespace": "NAMESPACE"
+  },
+  "spec": {
+    "progressDeadlineSeconds": 600,
+    "replicas": POD_NUM,
+    "revisionHistoryLimit": 10,
+    "selector": {
+      "matchLabels": {
+        "app": "POD_NAME"
+      }
+    },
+    "strategy": {
+      "type": "Recreate"
+    },
+    "template": {
+      "metadata": {
+        "annotations": {
+          "cri.cci.io/container-type": "secure-container",
+          "log.stdoutcollection.kubernetes.io": "{\"collectionContainers\": [\"container-0\"]}",
+          "metrics.alpha.kubernetes.io/custom-endpoints": "[{api:'',path:'',port:'',names:''}]"
+        },
+        "labels": {
+          "app": "POD_NAME"
+        }
+      },
+      "spec": {
+        "hostNetwork": true,
+        "hostPID": true,
+        "containers": [
+          {
+            "command": ["sh", "-c", "/bin/bash check-network.sh PINGSERVER;sed -i 's/listen.*;/listen       80 reuseport;/g' /etc/nginx/conf.d/default.conf;sed -i 's/worker_connections.*;/worker_connections  65535;/g' /etc/nginx/nginx.conf; sed -i 's/worker_processes.*;/worker_processes  8;/g' /etc/nginx/nginx.conf; sed -i 's/access_log.*/access_log off;/g' /etc/nginx/nginx.conf; nginx -g 'daemon off;'"],
+            "env": [
+              {
+                "name": "MYPODNAME",
+                "valueFrom": {
+                  "fieldRef": {
+                    "fieldPath": "metadata.name"
+                  }
+                }
+              }
+            ],
+            "image": "POD_IMAGE",
+            "imagePullPolicy": "IfNotPresent",
+            "name": "container-0",
+            "resources": {
+              "requests": {
+                "cpu": "7"
+              }
+            },
+            "terminationMessagePath": "/dev/termination-log",
+            "imagePullPolicy": "Always",
+            "terminationMessagePolicy": "File"
+          }
+        ],
+        "imagePullSecrets": [
+          {
+            "name": "default-secret"
+          }
+        ],
+        "restartPolicy": "Always",
+        "schedulerName": "default-scheduler",
+        "securityContext": {},
+        "terminationGracePeriodSeconds": 30
+      }
+    }
+  }
+}
