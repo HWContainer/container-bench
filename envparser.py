@@ -59,12 +59,12 @@ with open('curl-get-pods.log', 'r') as f:
   pod_data=json.loads(strJson)
 
 logs={}
-with open('curl-get-realstart.log', 'r') as f:
-  for l in f:
-    runtothrough=re.findall("^[^\s]+\s+[^\s]+\s+([^\s]+\s+[^\s]+)\s+Check ([^\s]+).*success take: (\d+\.\d+)", l)
-    if runtothrough:
-      last_tm=time.mktime((datetime.datetime.strptime(runtothrough[0][0], "%Y-%m-%d %H:%M:%S")+datetime.timedelta(hours=8)).timetuple())
-      logs[runtothrough[0][1]] = [{'delta': last_tm-begin_tm, 'reason': "ping"}]
+#with open('curl-get-realstart.log', 'r') as f:
+#  for l in f:
+#    runtothrough=re.findall("^[^\s]+\s+[^\s]+\s+([^\s]+\s+[^\s]+)\s+Check ([^\s]+).*success take: (\d+\.\d+)", l)
+#    if runtothrough:
+#      last_tm=time.mktime((datetime.datetime.strptime(runtothrough[0][0], "%Y-%m-%d %H:%M:%S")+datetime.timedelta(hours=8)).timetuple())
+#      logs[runtothrough[0][1]] = [{'delta': last_tm-begin_tm, 'reason': "ping"}]
 
 def mean(numbers):
     return float(sum(numbers)) / max(len(numbers), 1)
@@ -104,9 +104,11 @@ for j in pod_data['items']:
 
 arr = []
 for k, e in events.items():
-  #print(k)
-  #print(e)
-  #print('|'.join(["{}|{}".format(x['reason'], x['delta']) for x in sorted(e+pods[k], key=lambda x: x['delta'])]))
+  for x in e:
+    if x['reason'] == 'Scheduled' and x['delta'] > 446:
+      #print(k)
+      #print(e)
+      print(k+'|'.join(["{}|{}".format(x['reason'], x['delta']) for x in sorted(e+pods[k], key=lambda x: x['delta'])]))
   arr.append({x['reason']:x['delta'] for x in e+pods[k]+logs.get(k, [])})
 arr = [a for a in arr if 'Scheduled' in a ]
 print("total pods = {}".format(len(arr)))
@@ -134,3 +136,8 @@ else:
 print("finishedAt \tmin={},\t max={},\t avg={}".format(min([x['finishedAt'] for x in arr]), max([x['finishedAt'] for x in arr]), mean([x['finishedAt'] for x in arr])))
 # print("excuted=", ([x['finishedAt'] - x['startedAt'] for x in arr]))
 # print("\n".join(events.keys()))
+m=max([x['Scheduled'] for x in arr])
+print(m)
+for a in arr:
+  if a['Scheduled'] == m:
+    print("{}".format(a))

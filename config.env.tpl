@@ -9,6 +9,7 @@ grafanaimage=grafana:7.1.4
 prometheusimage=prometheus
 namespace=default
 endpoint=https://cci.cn-north-4.myhuaweicloud.com
+cce=https://cce.cn-north-4.myhuaweicloud.com
 iam=https://iam.cn-north-4.myhuaweicloud.com
 domain=
 user=

@@ -447,3 +447,17 @@ ccestoragetest: ## evs-cce-ssd nfs-cce-perf nfs-cce-sfsturbo-perf nfs-cce-sfstur
 	make obs-cce-warm
 	make clean
 
+cce_cluster: ## get cluster
+	. $(current_dir)/script/get_token.sh; \
+	time bash $(current_dir)/script/get_cce_cluster.sh  $(cluster_name)
+
+cce_nodepools: ## get token
+	. $(current_dir)/script/get_token.sh; \
+	. $(current_dir)/script/get_cce_cluster.sh $(cluster_name); \
+	time bash $(current_dir)/script/get_cce_nodepools.sh
+
+scale_nodepools: ## get token
+	. $(current_dir)/script/get_token.sh; \
+	. $(current_dir)/script/get_cce_cluster.sh $(cluster_name); \
+	time bash $(current_dir)/script/scale_nodepools.sh $(size) $(pool_ids)
+
