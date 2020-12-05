@@ -461,3 +461,10 @@ scale_nodepools: ## get token
 	. $(current_dir)/script/get_cce_cluster.sh $(cluster_name); \
 	time bash $(current_dir)/script/scale_nodepools.sh $(size) $(pool_ids)
 
+watchpods: ## monit pods to record scaling
+        bash $(current_dir)/script/benchmark-monit-pods2.sh --namespace $(namespace) --name perf-test
+
+watchpods2: ## monit pods to record scaling
+	bash $(current_dir)/script/benchmark-monit-pods2.sh --namespace A --name perf-test
+
+
