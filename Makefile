@@ -19,9 +19,9 @@ help: ## This help.
 
 
 image: ## build image
-	docker build -f $(current_dir)/Dockerfile.image -t $(swr)/$(image) $(current_dir)/script
-	docker push $(swr)/$(image)
-	docker rmi $(swr)/$(image)
+	docker build -f $(current_dir)/dockerfiles/Dockerfile.fortio -t $(swr)/$(fortioimage) $(current_dir)/script
+	docker push $(swr)/$(fortioimage)
+	docker rmi $(swr)/$(fortioimage)
 
 base_image: ## build image
 	docker build -f $(current_dir)/dockerfiles/Dockerfile.fortio -t $(swr)/$(fortioimage) $(current_dir)/script
@@ -451,6 +451,11 @@ cce_cluster: ## get cluster
 	. $(current_dir)/script/get_token.sh; \
 	time bash $(current_dir)/script/get_cce_cluster.sh  $(cluster_name)
 
+ecs: ## get ecs
+	. $(current_dir)/script/get_token.sh; \
+	time bash $(current_dir)/script/get_ecs.sh 
+
+
 cce_nodepools: ## get token
 	. $(current_dir)/script/get_token.sh; \
 	. $(current_dir)/script/get_cce_cluster.sh $(cluster_name); \
@@ -462,7 +467,7 @@ scale_nodepools: ## get token
 	time bash $(current_dir)/script/scale_nodepools.sh $(size) $(pool_ids)
 
 watchpods: ## monit pods to record scaling
-        bash $(current_dir)/script/benchmark-monit-pods2.sh --namespace $(namespace) --name perf-test
+	bash $(current_dir)/script/benchmark-monit-pods2.sh --namespace $(namespace) --name perf-test
 
 watchpods2: ## monit pods to record scaling
 	bash $(current_dir)/script/benchmark-monit-pods2.sh --namespace A --name perf-test
