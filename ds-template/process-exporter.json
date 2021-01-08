@@ -25,6 +25,9 @@
                 }
             },
             "spec": {
+                "nodeSelector": {
+                    "metrics": "true"
+                },
                 "volumes": [
                     {
                         "name": "proc",
@@ -41,7 +44,7 @@
                         "command": ["/bin/process-exporter"],
                         "args": [
                             "-config.path=/etc/process-name.yaml",
-                            "-path.procfs=/host/proc",
+                            "-procfs=/host/proc",
                             "-web.listen-address=0.0.0.0:32256"
                         ],
                         "volumeMounts": [
