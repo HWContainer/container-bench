@@ -53,7 +53,7 @@ server: ## create a server for ping
 	bash $(current_dir)/script/benchmark-create-pod.sh --pod-num 1 --name perf-server --namespace $(namespace) --pod-template $(current_dir)/pod-template/pod.json --image $(swr)/$(serverimage)
         
 metrics: ## create a grafana and process-exporter
-	make monit; make process; make cadvisor; make node
+	make monit; make process; make node
 
 monit:
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --pod-num 1 --name grafana-server --namespace $(namespace) --pod-template $(current_dir)/deploy-template/grafana-server.json --image $(swr)/$(grafanaimage)

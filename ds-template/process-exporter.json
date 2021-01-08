@@ -20,7 +20,7 @@
                     "app": "POD_NAME"
                 },
                 "annotations": {
-                    "prometheus.io/port": "9256",
+                    "prometheus.io/port": "32256",
                     "prometheus.io/scrape": "true"
                 }
             },
@@ -38,9 +38,11 @@
                     {
                         "name": "POD_NAME",
                         "image": "POD_IMAGE",
+                        "command": ["/bin/process-exporter"],
                         "args": [
-                            "--path.procfs=/host/proc",
-                            "--web.listen-address=0.0.0.0:9256"
+                            "-config.path=/etc/process-name.yaml",
+                            "-path.procfs=/host/proc",
+                            "-web.listen-address=0.0.0.0:32256"
                         ],
                         "volumeMounts": [
                             {
