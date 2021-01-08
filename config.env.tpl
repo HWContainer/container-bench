@@ -1,12 +1,16 @@
 swr=swr.cn-south-1.myhuaweicloud.com/container_perf
 baseimage=perf-nginx:v10
 image=perf-nginx:v10-test
+perf-nginx=perf-nginx:v10
+perf-density=perf-nginx:v10
+perf-fortio=fortio
 serverimage=perf-nginx:v10
 fortioimage=fortio
 processimage=process-exporter-0602-1
 nodeimage=node-exporter:v1.0.1
 grafanaimage=grafana:7.1.4
 prometheusimage=prometheus
+
 namespace=default
 endpoint=https://cci.cn-north-4.myhuaweicloud.com
 cce=https://cce.cn-north-4.myhuaweicloud.com

@@ -12,6 +12,7 @@ function checkPodsRunning(){
     pre_created=0
     pre_scheduled=0
     pre_running=0
+    pre_completed=0
     pre_target=0
     while [[ ! -f finish ]];do
         if [[ -f start ]]; then 
@@ -34,19 +35,23 @@ function checkPodsRunning(){
 
         finishedPods=`echo "$ret" |grep ${BASE_NAME}|  grep -v "Pending"| wc -l`
         scheduled=$finishedPods
+
+        finishedPods=`echo "$ret" | grep ${BASE_NAME}| grep -e "Running"| wc -l`
+        running=$finishedPods
         
         finishedPods=`echo "$ret" | grep ${BASE_NAME}| grep -e "Running" -e "Completed"| wc -l`
-        running=$finishedPods
+        completed=$finishedPods
 
 
-        if [[ ${nodes} -ne ${pre_nodes} ]] || [[ ${ready} -ne ${pre_ready} ]] || [[ ${taint} -ne ${pre_taint} ]] || [[ ${running} -ne ${pre_running} ]] || [[ ${scheduled} -ne ${pre_scheduled} ]] || [[ ${created} -ne ${pre_created} ]] || [[ ${target} -ne ${pre_target} ]] ; then
-            echo "at `date +%Y-%m-%d' '%H:%M:%S.%N`: $nodes $ready $taint $target $created $scheduled $running"
+        if [[ ${nodes} -ne ${pre_nodes} ]] || [[ ${ready} -ne ${pre_ready} ]] || [[ ${taint} -ne ${pre_taint} ]] || [[ ${running} -ne ${pre_running} ]] || [[ ${scheduled} -ne ${pre_scheduled} ]] || [[ ${created} -ne ${pre_created} ]] || [[ ${target} -ne ${pre_target} ]] || [[ ${completed} -ne ${pre_completed} ]]; then
+            echo "at `date +%Y-%m-%d' '%H:%M:%S.%N`: $nodes $ready $taint $target $created $scheduled $running $completed"
             pre_nodes=$nodes
             pre_ready=$ready
             pre_taint=$taint
             pre_running=$running
             pre_scheduled=$scheduled
             pre_created=$created
+            pre_completed=$completed
             pre_target=$target
         fi
     done
@@ -105,7 +110,7 @@ date +%Y-%m-%d' '%H:%M:%S > begin
 echo "Test start:              `date +%Y-%m-%d' '%H:%M:%S.%N`"
 echo "namespace: $NAMESPACE"
 echo "      app: $BASE_NAME"
-echo "at <date>: nodes ready readytaint target created sechuded running"
+echo "at <date>: nodes ready readytaint target created sechuded running completed"
 echo "---------------------------------------------"
 checkPodsRunning
 echo "Test finished:           `date +%Y-%m-%d' '%H:%M:%S.%N`"

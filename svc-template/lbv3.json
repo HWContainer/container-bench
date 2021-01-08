@@ -1,0 +1,36 @@
+
+{
+    "apiVersion": "v1",
+    "kind": "Service",
+    "metadata": {
+        "labels": {
+            "app": "POD_NAME",
+            "name": "SVC_NAME"
+        },
+        "annotations": {
+            "kubernetes.io/elb.class": "performance",
+            "kubernetes.io/elb.health-check-flag": "on",
+            "kubernetes.io/elb.health-check-option": "{\"protocol\":\"TCP\",\"delay\":\"5\",\"timeout\":\"10\",\"max_retries\":\"3\"}",
+            "kubernetes.io/elb.autocreate": "{\"type\":\"inner\"}"
+        },
+        "name": "SVC_NAME",
+        "namespace": "NAMESPACE"
+    },
+    "spec": {
+        "externalTrafficPolicy": "Cluster",
+        "ports": [
+            {
+                "name": "http",
+                "port": 80,
+                "protocol": "TCP",
+                "targetPort":80 
+            }
+        ],
+        "selector": {
+            "app": "POD_NAME"
+        },
+        "sessionAffinity": "None",
+        "type": "LoadBalancer"
+    }
+}
+

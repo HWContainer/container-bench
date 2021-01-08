@@ -21,6 +21,9 @@
                 }
             },
             "spec": {
+                "nodeSelector": {
+                    "metrics": "true"
+                },
                 "containers": [
                     {
                         "name": "POD_NAME",

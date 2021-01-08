@@ -1,0 +1,44 @@
+{
+    "apiVersion": "extensions/v1beta1",
+    "kind": "Ingress",
+    "metadata": {
+        "annotations": {
+            "ingress.kubernetes.io/secure-backends": "false",
+            "ingress.beta.kubernetes.io/role": "data",
+            "kubernetes.io/ingress.class": "cce",
+            "kubernetes.io/elb.class": "performance",
+            "kubernetes.io/elb.port": "443",
+            "kubernetes.io/elb.health-check-flag": "on",
+            "kubernetes.io/elb.health-check-option": "{\"protocol\":\"TCP\",\"delay\":\"5\",\"timeout\":\"10\",\"max_retries\":\"3\"}",
+            "kubernetes.io/elb.slowstart": "60",
+            "kubernetes.io/elb.autocreate": "{\"type\":\"inner\"}"
+        },
+        "labels": {
+            "zone": "data",
+            "isExternal": "true"
+        },
+        "name": "INGRESS_NAME"
+    },
+    "spec": {
+        "tls": [{"secretName": "SECRET_NAME"}],
+        "rules": [
+            {
+                "http": {
+                    "paths": [
+                        {
+                            "backend": {
+                                "serviceName": "SVC_NAME",
+                                "servicePort": 80
+                            },
+                            "path": "/",
+                            "property": {
+                                "ingress.beta.kubernetes.io/url-match-mode": "STARTS_WITH"
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}
+
