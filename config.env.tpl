@@ -24,9 +24,13 @@ control_plane=/root/.kube/config
 default_cluster=/root/.kube/config
 cluster_list=
 
-prometheus_url=http://47.110.35.22:9090
+prometheus_url=
 evs=evs-cce
 nfs=nfs-cce
 node=172.17.62.223
 nodec=47.110.70.89
 nodem=172.18.7.170
+
+servers=
+clients=
+ingress_secret=

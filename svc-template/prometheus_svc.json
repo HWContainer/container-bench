@@ -6,6 +6,10 @@
             "app": "POD_NAME",
             "name": "SVC_NAME"
         },
+        "annotations": {
+            "kubernetes.io/elb.class": "union",
+            "kubernetes.io/elb.autocreate": "{\"type\":\"inner\"}"
+        },
         "name": "SVC_NAME",
         "namespace": "NAMESPACE"
     },
@@ -22,6 +26,6 @@
             "app": "POD_NAME"
         },
         "sessionAffinity": "None",
-        "type": "NodePort"
+        "type": "LoadBalancer"
     }
 }

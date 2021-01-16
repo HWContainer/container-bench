@@ -19,10 +19,10 @@ help: ## This help.
 
 .DEFAULT_GOAL := help
 
-ingress_secret=test
+ingress_secret ?= test
 nodec_ip ?= 172.16.84.79
-servers = 64u-c6ne-euler
-clients = 64u-c6ne-euler
+servers ?= 64u-c6ne-euler
+clients ?= 64u-c6ne-euler
 l7_nodeport = nodecluster nodelocal
 l7_lb = lbv2 lbv3
 l7_http = lbv2http lbv3http

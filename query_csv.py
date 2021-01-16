@@ -47,7 +47,7 @@ def get_metrics(t, params):
     writer.writerow(["name", "timestamp", t])
     
     for result in results:
-        podname=result['metric'].get('pod_name', result['metric'].get('groupname', 'total'))
+        podname=result['metric'].get('pod_name', result['metric'].get('groupname', result['metric'].get('mode', 'total')))
         for l in result['values']:
         	writer.writerow([podname]+l)
         print("{} {} max {}".format(podname, t, max([float(l[1]) for l in result['values']])))
@@ -65,20 +65,28 @@ if len(sys.argv) == 3:
 
 if len(sys.argv) == 4:
     host=sys.argv[3]
+    instance="{}:.*".format(host)
     node_cpu={'query': 'sum (rate(node_cpu_seconds_total{instance=~"'+"{}:.*".format(host)+'", mode!="idle"}[1m]))'}
-    process_cpu={'query': 'sum(rate(namedprocess_namegroup_cpu_user_seconds_total{instance=~"'+"{}:9256".format(host)+'"}[1m])+rate(namedprocess_namegroup_cpu_system_seconds_total{instance="'+"{}:9256".format(host)+'"}[1m]))'}
-    top_process_cpu={'query': 'topk(5,(sum(rate(namedprocess_namegroup_cpu_user_seconds_total{instance=~"'+"{}:9256".format(host)+'"}[1m])+rate(namedprocess_namegroup_cpu_system_seconds_total{instance=~"'+"{}:9256".format(host)+'"}[1m])) by (groupname)))'}
+    top_node_cpu={'query': 'sum (rate(node_cpu_seconds_total{instance=~"'+"{}:.*".format(host)+'", mode!="idle"}[1m])) by (mode)'}
+    node_mem={'query': 'node_memory_MemTotal_bytes{instance=~"'+instance+'"} - node_memory_MemFree_bytes{instance=~"'+instance+'"} - node_memory_Cached_bytes{instance=~"'+instance+'"} - node_memory_Buffers_bytes{instance=~"'+instance+'"}'}
+
+    process_cpu={'query': 'sum(rate(namedprocess_namegroup_cpu_user_seconds_total{instance=~"'+"{}:.*".format(host)+'"}[1m])+rate(namedprocess_namegroup_cpu_system_seconds_total{instance=~"'+"{}:.*".format(host)+'"}[1m]))'}
+    top_process_cpu={'query': 'topk(5,(sum(rate(namedprocess_namegroup_cpu_user_seconds_total{instance=~"'+"{}:.*".format(host)+'"}[1m])+rate(namedprocess_namegroup_cpu_system_seconds_total{instance=~"'+"{}:.*".format(host)+'"}[1m])) by (groupname)))'}
     
-    process_mem={'query': 'sum(avg_over_time(namedprocess_namegroup_memory_bytes{memtype="swapped",instance=~"'+"{}:9256".format(host)+'"}[1m])+ ignoring (memtype) avg_over_time(namedprocess_namegroup_memory_bytes{memtype="resident",instance=~"'+"{}:9256".format(host)+'"}[1m]))'}
+    process_mem={'query': 'sum(avg_over_time(namedprocess_namegroup_memory_bytes{memtype="swapped",instance=~"'+"{}:.*".format(host)+'"}[1m])+ ignoring (memtype) avg_over_time(namedprocess_namegroup_memory_bytes{memtype="resident",instance=~"'+"{}:.*".format(host)+'"}[1m]))'}
     q = 'topk(5,(sum(avg_over_time(namedprocess_namegroup_memory_bytes{memtype="swapped",instance=~"' + \
-        "{}:9256".format(host) + \
+        "{}:.*".format(host) + \
         '"}[1m]) + ignoring (memtype) avg_over_time(namedprocess_namegroup_memory_bytes{memtype="resident",instance=~"'\
-        + "{}:9256".format(host) \
+        + "{}:.*".format(host) \
         + '"}[1m])) by(groupname)))'
     top_process_mem={'query': q}
 
     node_cpu.update(params)
     get_metrics(host+'node cpu', node_cpu)
+    top_node_cpu.update(params)
+    get_metrics(host+'nodetop cpu', top_node_cpu)
+    node_mem.update(params)
+    get_metrics(host+'node mem', node_mem)
     process_cpu.update(params)
     get_metrics(host+'process cpu', process_cpu)
     top_process_cpu.update(params)
@@ -87,3 +95,4 @@ if len(sys.argv) == 4:
     get_metrics(host+'process mem', process_mem)
     top_process_mem.update(params)
     get_metrics(host+'topprocess mem', top_process_mem)
+

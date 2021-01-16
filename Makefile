@@ -422,7 +422,13 @@ container_invoke: ## call_pod_test call_svc_test service_metric pod_metric
 	sleep 120
 	make service_metric
 	sleep 120
-l4test: ## run_network_lat pps_metric throughput_metric connect_metric
+l4test: ## call l4test of Makefile_network
+	$(MAKE) l4test -f $(current_dir)/Makefile_network
+
+l7test: ## call l7test of Makefile_network
+	$(MAKE) l7test -f $(current_dir)/Makefile_network
+
+l4testold: 
 	make run_network_lat
 	sleep 120
 	make pps_metric
