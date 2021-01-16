@@ -9,6 +9,7 @@ nodeclient_ip=`kubectl get pods --selector app=$client -o jsonpath='{.items[0].s
 kubectl exec $podserver_name -- pkill qperf
 kubectl exec $podclient_name -- pkill qperf
 currentTimeStamp=`date +%s.%2N`
+sleep 60
 python query_csv.py $prometheus_url $currentTimeStamp $nodeserver_ip
 python query_csv.py $prometheus_url $currentTimeStamp $nodeclient_ip
 

@@ -5,6 +5,7 @@ nodeserver_ip=`kubectl get pods --selector app=$server -o jsonpath='{.items[0].s
 
 svc_ip=`kubectl get ingress $service -ojsonpath='{.status.loadBalancer.ingress[0].ip}'`
 currentTimeStamp=`date +%s.%2N`
+sleep 60
 python query_csv.py $prometheus_url $currentTimeStamp $nodeserver_ip
 python query_csv.py $prometheus_url $currentTimeStamp $nodeclient_ip
 
