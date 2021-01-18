@@ -11,7 +11,7 @@
             "kubernetes.io/elb.class": "performance",
             "kubernetes.io/elb.health-check-flag": "on",
             "kubernetes.io/elb.health-check-option": "{\"protocol\":\"TCP\",\"delay\":\"5\",\"timeout\":\"10\",\"max_retries\":\"3\"}",
-            "kubernetes.io/elb.autocreate": "{\"type\":\"inner\"}"
+            "kubernetes.io/elb.autocreate": "{\"type\":\"inner\", \"l4_flavor_name\":\"L4_flavor.elb.s2.large\", \"available_zone\": [\"AZ_NAME\"]}"
         },
         "name": "SVC_NAME",
         "namespace": "NAMESPACE"

@@ -65,6 +65,7 @@ while test $# -gt 0; do
             echo "     --app-num             set apps number to select. Default: 1"
             echo "     --name                set svc base name, will use this name and id to generate pod name. Default: sina-test"
             echo "     --app                 set app base name, will use this name and id to generate pod name. Default: sina-test"
+            echo "     --az                  set az name, will use this name and id to lb instance az. Default: sina-test"
             echo "     --namespace           set namespace to create pod, this namespace should already created. Default: sina-test"
             echo "     --template            the file path of pod template in json format"
             echo ""
@@ -90,6 +91,10 @@ while test $# -gt 0; do
             APP_NAME=${2}
             shift 2
             ;;
+        --az)
+            AZ_NAME=${2}
+            shift 2
+            ;;
         --app-num)
             APP_NUM=${2}
             shift 2
@@ -104,6 +109,7 @@ done
 POD_TEMPLATE=`cat ${TEMPLATE_FILE} | sed "s/^[ \t]*//g"| sed ":a;N;s/\n//g;ta"`
 POD_TEMPLATE=`python pys/fix_svc.py --template ${TEMPLATE_FILE}`
 pod=${POD_TEMPLATE//NAMESPACE/${NAMESPACE}}
+pod=${pod//AZ_NAME/${AZ_NAME}}
 echo "Test start:              `date +%Y-%m-%d' '%H:%M:%S.%N`"
 createSvcs
 sleep 1

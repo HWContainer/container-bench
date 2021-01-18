@@ -10,10 +10,10 @@ done
 
 currentTimeStamp=`date +%s.%2N`
 if [[ "$nodec_ip" == "127.0.0.1" ]]; then
-fortio load -qps $qps -c $connect -t 120s --keepalive=false $svc_ip
+fortio load -qps $qps -c $connect -t 120s --keepalive=false http://$svc_ip
 else
 sshpass -p Huawei@123 ssh -oStrictHostKeyChecking=no root@$nodec_ip<<END
-fortio load -qps $qps -c $connect -t 120s --keepalive=false $svc_ip
+fortio load -qps $qps -c $connect -t 120s --keepalive=false http://$svc_ip
 END
 fi
 

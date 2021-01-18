@@ -10,7 +10,6 @@
             "kubernetes.io/elb.port": "443",
             "kubernetes.io/elb.health-check-flag": "on",
             "kubernetes.io/elb.health-check-option": "{\"protocol\":\"TCP\",\"delay\":\"5\",\"timeout\":\"10\",\"max_retries\":\"3\"}",
-            "kubernetes.io/elb.slowstart": "60",
             "kubernetes.io/elb.autocreate": "{\"type\":\"inner\"}"
         },
         "labels": {

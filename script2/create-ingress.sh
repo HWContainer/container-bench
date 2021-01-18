@@ -66,6 +66,7 @@ while test $# -gt 0; do
             echo "     --ingress-num         set apps number to select. Default: 1"
             echo "     --name                set ingress base name, will use this name and id to generate ingress. Default: sina-test"
             echo "     --svc                 set service base name, will use this name and id to generate select svc. Default: sina-test"
+            echo "     --az                  set az name, will use this name set elb az. Default: sina-test"
             echo "     --secret              set ingress secret name, will use this name and for ingress https. Default: test"
             echo "     --namespace           set namespace to create pod, this namespace should already created. Default: sina-test"
             echo "     --template            the file path of pod template in json format"
@@ -92,6 +93,10 @@ while test $# -gt 0; do
             SVC_NAME=${2}
             shift 2
             ;;
+        --az)
+            AZ_NAME=${2}
+            shift 2
+            ;;
         --secret)
             SECRET_NAME=${2}
             shift 2
@@ -110,7 +115,8 @@ done
 POD_TEMPLATE=`cat ${TEMPLATE_FILE} | sed "s/^[ \t]*//g"| sed ":a;N;s/\n//g;ta"`
 POD_TEMPLATE=`python pys/fix_svc.py --template ${TEMPLATE_FILE}`
 pod=${POD_TEMPLATE//NAMESPACE/${NAMESPACE}}
-pod=${POD_TEMPLATE//SECRET_NAME/${SECRET_NAME}}
+pod=${pod//SECRET_NAME/${SECRET_NAME}}
+pod=${pod//AZ_NAME/${AZ_NAME}}
 echo "Test start:              `date +%Y-%m-%d' '%H:%M:%S.%N`"
 createSvcs
 sleep 1

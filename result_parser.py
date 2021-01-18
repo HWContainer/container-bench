@@ -58,7 +58,7 @@ def parser_fortio_logs(file):
             if 'All done' in i:
                 continue
             if 'Starting http test for' in i:
-                url = re.findall(r'(http://[^\s]+) with ([\d\*]+)', i)
+                url = re.findall(r'([^\s]+) with ([\d\*]+)', i)
                 case = [{}, {}]
                 case.extend(url)
                 case_list.append(case)
@@ -66,7 +66,7 @@ def parser_fortio_logs(file):
                 continue
 
             if 'Starting GRPC Ping test' in i:
-                url = re.findall(r'(http://[^\s]+) with ([\d\*]+)', i)
+                url = re.findall(r'([^\s]+) with ([\d\*]+)', i)
                 case = [{}, {}]
                 case.extend(url)
                 case_list.append(case)

@@ -58,10 +58,10 @@ deployhost.%: ## create deploy.<template>.<basename>.os:euler,role:client.<deplo
 	bash $(current_dir)script2/create-deploy.sh --namespace $(namespace) --template $(current_dir)deploy-template/$(word 2, $(subst ., ,$@))_host.json --image $(swr)/$($(word 2, $(subst ., ,$@))) --name $(word 3, $(subst ., ,$@)) --select $(word 4, $(subst ., ,$@)) --deploy-num $(word 5, $(subst ., ,$@)) --pod-num $(word 6, $(subst ., ,$@)) |tee logs/$@.txt
 
 svc.%: ## svc.<template>.<app>.<basename>.<svcnum>.<appnum>
-	bash $(current_dir)/script2/create-svc.sh --namespace $(namespace) --template $(current_dir)/svc-template/$(word 2, $(subst ., ,$@)).json --app $(word 3, $(subst ., ,$@)) --name $(word 4, $(subst ., ,$@)) --svc-num $(word 5, $(subst ., ,$@)) --app-num $(word 6, $(subst ., ,$@)) |tee logs/$@.txt
+	bash $(current_dir)/script2/create-svc.sh --namespace $(namespace) --template $(current_dir)/svc-template/$(word 2, $(subst ., ,$@)).json --app $(word 3, $(subst ., ,$@)) --name $(word 4, $(subst ., ,$@)) --svc-num $(word 5, $(subst ., ,$@)) --app-num $(word 6, $(subst ., ,$@)) --az $(az)|tee logs/$@.txt
 
 ingress.%: ## ingress.<template>.<service>.<basename>.<svcnum>.<appnum>
-	bash $(current_dir)/script2/create-ingress.sh --namespace $(namespace) --template $(current_dir)/ingress-template/$(word 2, $(subst ., ,$@)).json --svc $(word 3, $(subst ., ,$@)) --name $(word 4, $(subst ., ,$@)) --ingress-num $(word 5, $(subst ., ,$@)) --svc-num $(word 6, $(subst ., ,$@)) --secret $(ingress_secret)|tee logs/$@.txt
+	bash $(current_dir)/script2/create-ingress.sh --namespace $(namespace) --template $(current_dir)/ingress-template/$(word 2, $(subst ., ,$@)).json --svc $(word 3, $(subst ., ,$@)) --name $(word 4, $(subst ., ,$@)) --ingress-num $(word 5, $(subst ., ,$@)) --svc-num $(word 6, $(subst ., ,$@)) --secret $(ingress_secret) --az $(az)|tee logs/$@.txt
 
 $(foreach f, $(l4),\
 $(foreach s, $(servers),\
@@ -119,8 +119,8 @@ $(foreach s, $(servers), $(t).$(f).$(s)))): ## type.service.server example: make
 $(foreach t, $(outingress),\
 $(foreach f, $($(t)),\
 $(foreach s, $(servers), $(t).$(f).$(s)))): ## type.service.server example: make nodec_ip=172.16.84.79 l7_http.lbv2http.64u-c6ne-euler
-	$(MAKE)	ingress.$(word 2, $(subst ., ,$@)).$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@)).$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@)).1.1 \
-		svc.$(word 2, $(subst ., ,$@)).$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@)).$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@)).1.1 \
+	$(MAKE)	svc.$(word 2, $(subst ., ,$@)).$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@)).$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@)).1.1 \
+		ingress.$(word 2, $(subst ., ,$@)).$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@)).$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@)).1.1 \
 		deploy.perf-nginx.$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@)).$(word 3, $(subst ., ,$@))-server:true.1.1 -f $(mkfile_path)
 	prometheus_url=$${prometheus_url:-http://`kubectl get svc prometheus-server-1 -ojsonpath="{..ip}"`:9090} \
 	server=$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@))-1 nodec_ip=$(nodec_ip) service=$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@))-1 \
