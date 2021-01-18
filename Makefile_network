@@ -16,11 +16,13 @@ help: ## This help.
 	@echo "$(foreach t, $(outingress) $(outsvc), $(foreach f, $($(t)), $(foreach s, $(servers),$(t).$(f).$(s))))"|tr ' ' '\n'|xargs -i echo {}|awk {'printf "\033[36m%-40s\033[0m %s\n", $$1, "out test"'}
 	@echo "$(foreach f, $(l4), $(foreach s, $(servers), $(foreach c, $(clients),$(f).$(s).$(c))))"|tr ' ' '\n'|xargs -i echo {}|awk {'printf "\033[36m%-40s\033[0m %s\n", $$1, "l4 test"'}
 	@echo "$(foreach f, $(l7), $(foreach s, $(servers), $(foreach c, $(clients), $(f).$(s).$(c))))"|tr ' ' '\n'|xargs -i echo {}|awk {'printf "\033[36m%-40s\033[0m %s\n", $$1, "l7 test"'}
+	@echo $(foreach t, $(outsvc) $(outingress), $(foreach f, $($(t)), $(t).$(f))) |tr ' ' '\n'|xargs -i echo {}|awk {'printf "\033[36m%-40s\033[0m %s\n", $$1, "out test"'}
+	@echo $(foreach t, $(outsvc) $(outingress), $(t)) |tr ' ' '\n'|xargs -i echo {}|awk {'printf "\033[36m%-40s\033[0m %s\n", $$1, "out test"'}
 
 .DEFAULT_GOAL := help
 
 ingress_secret ?= test
-nodec_ip ?= 172.16.84.79
+nodec_ip ?= 127.0.0.1
 servers ?= 64u-c6ne-euler
 clients ?= 64u-c6ne-euler
 l7_nodeport = nodecluster nodelocal
@@ -104,9 +106,6 @@ $(l7): ## shortpod shortsvc longpod longsvc
 l7test: clean ## make all l7 test
 	$(foreach f, $(l7), $(MAKE) $(f) -f $(mkfile_path); sleep 120;)
 
-outl7: ## test from node outsize cluster
-	bash -x $(current_dir)script2/$@.sh 2>logs/$@.log 1>&2
-
 $(foreach t, $(outsvc),\
 $(foreach f, $($(t)),\
 $(foreach s, $(servers), $(t).$(f).$(s)))): ## type.service.server example: make nodec_ip=172.16.84.79 l7_nodeport.nodecluster.64u-c6ne-euler
@@ -119,7 +118,7 @@ $(foreach s, $(servers), $(t).$(f).$(s)))): ## type.service.server example: make
 
 $(foreach t, $(outingress),\
 $(foreach f, $($(t)),\
-$(foreach s, $(servers), $(t).$(f).$(s)))): ## type.service.server example: make nodec_ip=172.16.84.79 l7_nodeport.nodecluster.64u-c6ne-euler
+$(foreach s, $(servers), $(t).$(f).$(s)))): ## type.service.server example: make nodec_ip=172.16.84.79 l7_http.lbv2http.64u-c6ne-euler
 	$(MAKE)	ingress.$(word 2, $(subst ., ,$@)).$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@)).$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@)).1.1 \
 		svc.$(word 2, $(subst ., ,$@)).$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@)).$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@)).1.1 \
 		deploy.perf-nginx.$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@)).$(word 3, $(subst ., ,$@))-server:true.1.1 -f $(mkfile_path)
@@ -128,11 +127,12 @@ $(foreach s, $(servers), $(t).$(f).$(s)))): ## type.service.server example: make
 	qps=$(QPS) connect=$(CONNECT) \
 	bash -x $(current_dir)script2/out_$(word 1, $(subst ., ,$@)).sh 2>logs/$@.log 1>&2
 
-test:
-	echo $(foreach t, $(outsvc),\
-	$(foreach f, $($(t)), $(f)))
-
-$(foreach t, $(outsvc),\
+$(foreach t, $(outsvc) $(outingress),\
 $(foreach f, $($(t)), $(t).$(f))): ## type.service example: make nodec_ip=172.16.84.79 l7_nodeport.nodecluster
 	$(MAKE) $(foreach s, $(servers), $@.$(s)) -f $(mkfile_path)
 
+$(foreach t, $(outsvc) $(outingress), $(t)):
+	$(MAKE) $(foreach f, $($@), $@.$(f)) -f $(mkfile_path)
+
+outtest: clean ## test for outsize cluster
+	$(MAKE) $(foreach t, $(outsvc) $(outingress), $(t)) -f $(mkfile_path)
