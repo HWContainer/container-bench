@@ -6,6 +6,7 @@ nodeserver_ip=`kubectl get pods --selector app=$server -o jsonpath='{.items[0].s
 podclient_name=`kubectl get pods --selector app=$client -o jsonpath='{.items[0].metadata.name}'`
 nodeclient_ip=`kubectl get pods --selector app=$client -o jsonpath='{.items[0].status.hostIP}'`
 
+sleep 60
 currentTimeStamp=`date +%s.%2N`
 sleep 60
 python query_csv.py $prometheus_url $currentTimeStamp $nodeserver_ip
