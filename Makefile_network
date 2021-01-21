@@ -25,6 +25,9 @@ ingress_secret ?= test
 nodec_ip ?= 127.0.0.1
 servers ?= 64u-c6ne-euler
 clients ?= 64u-c6ne-euler
+CONNECT ?= 64
+QPS ?= 0
+PODS ?= 1
 l7_nodeport = nodecluster nodelocal
 l7_lb = lbv2 lbv3
 l7_http = lbv2http lbv3http
@@ -36,7 +39,10 @@ l4 = throughput pps connect lat
 
 l7 = shortpod shortsvc longpod longsvc
 
-k8s_obj = svc deploy pod pvc pv ingress
+k8s_obj = svc ds deploy pod pvc pv ingress
+
+register:
+	bash script/prometheus_register.sh
 
 clean: ## clean created_by=perf-test
 	$(MAKE) $(foreach n, $(k8s_obj), clean.$(n)) -f $(mkfile_path)
@@ -45,11 +51,18 @@ clean.%: ## clean obj
 	kubectl get $(lastword $(subst ., ,$@)) -n $(namespace) -l created_by=perf-test -o=jsonpath='{.items[*].metadata.name}' \
 	|tr ' ' '\n'|xargs -i kubectl delete $(lastword $(subst ., ,$@)) -n $(namespace) --ignore-not-found=true --wait=true {}
 
+new_clean.%: ## clean obj
+	kubectl get $(lastword $(word 2, $(subst ., ,$@)) -n $(namespace) -l $(word 3, $(subst ., ,$@))=true -o=jsonpath='{.items[*].metadata.name}' \
+	|tr ' ' '\n'|xargs -i kubectl delete $(word 2, $(subst ., ,$@)) -n $(namespace) --ignore-not-found=true --wait=true {}
+
 label_nodes: ## make label_nodes labels=a:b,c:d to label nodes
 	echo "label node"
 
 scale_nodes: ## make scale_nodes size=1 to scalce pool to size
 	echo "scale node"
+
+ds.%: ## create ds.<template>.<basename>.os:euler,role:client
+	bash $(current_dir)script2/create-ds.sh --namespace $(namespace) --template $(current_dir)ds-template/$(word 2, $(subst ., ,$@)).json --image $(swr)/$${$(word 2, $(subst ., ,$@)):-busybox} --name $(word 3, $(subst ., ,$@)) --select $(word 4, $(subst ., ,$@)) |tee logs/$@.txt
 
 deploy.%: ## create deploy.<template>.<basename>.os:euler,role:client.<deploy>.<replicas>
 	bash $(current_dir)script2/create-deploy.sh --namespace $(namespace) --template $(current_dir)deploy-template/$(word 2, $(subst ., ,$@)).json --image $(swr)/$($(word 2, $(subst ., ,$@))) --name $(word 3, $(subst ., ,$@)) --select $(word 4, $(subst ., ,$@)) --deploy-num $(word 5, $(subst ., ,$@)) --pod-num $(word 6, $(subst ., ,$@)) |tee logs/$@.txt
@@ -63,22 +76,30 @@ svc.%: ## svc.<template>.<app>.<basename>.<svcnum>.<appnum>
 ingress.%: ## ingress.<template>.<service>.<basename>.<svcnum>.<appnum>
 	bash $(current_dir)/script2/create-ingress.sh --namespace $(namespace) --template $(current_dir)/ingress-template/$(word 2, $(subst ., ,$@)).json --svc $(word 3, $(subst ., ,$@)) --name $(word 4, $(subst ., ,$@)) --ingress-num $(word 5, $(subst ., ,$@)) --svc-num $(word 6, $(subst ., ,$@)) --secret $(ingress_secret) --az $(az)|tee logs/$@.txt
 
+$(foreach f, $(l4), $(f).prepare.%): ## connect.prepare.<label> deploy ds and delete ds 
+	$(MAKE) ds.$(word 1, $(subst ., ,$@)).prepare-$(word 1, $(subst ., ,$@))-$(word 3, $(subst ., ,$@)).$(word 3, $(subst ., ,$@)):true -f $(mkfile_path)
+	# $(MAKE) new_clean.ds.$(word 3, $(subst ., ,$@)) -f $(mkfile_path)
+
 $(foreach f, $(l4),\
 $(foreach s, $(servers),\
 $(foreach c, $(clients), $(f).$(s).$(c)))): ##  throughput.server.client
-	$(MAKE) deploy.perf-nginx.server-$(word 2, $(subst ., ,$@)).$(word 2, $(subst ., ,$@))-server:true.1.1 \
-		deploy.perf-nginx.client-$(word 3, $(subst ., ,$@)).$(word 3, $(subst ., ,$@))-client:true.1.1 -f $(mkfile_path)
-
+	$(MAKE) clean -f $(mkfile_path)
+	$(MAKE) $(word 1, $(subst ., ,$@)).prepare.$(word 2, $(subst ., ,$@))-server $(word 1, $(subst ., ,$@)).prepare.$(word 3, $(subst ., ,$@))-client -f $(mkfile_path)
 	$(MAKE) deployhost.perf-nginx.serverhost-$(word 2, $(subst ., ,$@)).$(word 2, $(subst ., ,$@))-server:true.1.1 \
-		deployhost.perf-nginx.clienthost-$(word 3, $(subst ., ,$@)).$(word 3, $(subst ., ,$@))-client:true.1.1 -f $(mkfile_path)
+		deployhost.perf-nginx.clienthost-$(word 3, $(subst ., ,$@)).$(word 3, $(subst ., ,$@))-client:true.1.$(PODS) -f $(mkfile_path)
+
+	prometheus_url=$${prometheus_url:-http://`kubectl get svc prometheus-server-1 -ojsonpath="{..ip}"`:9090} \
+	client=clienthost-$(word 3, $(subst ., ,$@))-1 server=serverhost-$(word 2, $(subst ., ,$@))-1 \
+	bash -x $(current_dir)script2/l4_$(word 1, $(subst ., ,$@)).sh 2>logs/host-$@.log 1>&2
+
+	$(MAKE) clean -f $(mkfile_path)
+	$(MAKE) deploy.perf-nginx.server-$(word 2, $(subst ., ,$@)).$(word 2, $(subst ., ,$@))-server:true.1.1 \
+		deploy.perf-nginx.client-$(word 3, $(subst ., ,$@)).$(word 3, $(subst ., ,$@))-client:true.1.$(PODS) -f $(mkfile_path)
 
 	prometheus_url=$${prometheus_url:-http://`kubectl get svc prometheus-server-1 -ojsonpath="{..ip}"`:9090} \
 	client=client-$(word 3, $(subst ., ,$@))-1 server=server-$(word 2, $(subst ., ,$@))-1 \
 	bash -x $(current_dir)script2/l4_$(word 1, $(subst ., ,$@)).sh 2>logs/$@.log 1>&2
 
-	prometheus_url=$${prometheus_url:-http://`kubectl get svc prometheus-server-1 -ojsonpath="{..ip}"`:9090} \
-	client=clienthost-$(word 3, $(subst ., ,$@))-1 server=serverhost-$(word 2, $(subst ., ,$@))-1 \
-	bash -x $(current_dir)script2/l4_$(word 1, $(subst ., ,$@)).sh 2>logs/host-$@.log 1>&2
 
 $(l4): ## throughput pps connect pv
 	$(MAKE) $(foreach s, $(servers), $(foreach c, $(clients), $@.$(s).$(c))) -f $(mkfile_path)
@@ -86,8 +107,6 @@ $(l4): ## throughput pps connect pv
 l4test: clean ## make all l4 test
 	$(foreach f, $(l4), $(MAKE) $(f) -f $(mkfile_path); sleep 120;)
 
-CONNECT ?= 64
-QPS ?= 0
 $(foreach f, $(l7),\
 $(foreach s, $(servers),\
 $(foreach c, $(clients), $(f).$(s).$(c)))): ##  shortpod.server.client
@@ -101,7 +120,8 @@ $(foreach c, $(clients), $(f).$(s).$(c)))): ##  shortpod.server.client
 	bash -x $(current_dir)script2/l7_$(word 1, $(subst ., ,$@)).sh 2>logs/$@.log 1>&2
 
 $(l7): ## shortpod shortsvc longpod longsvc
-	$(MAKE) $(foreach s, $(servers), $(foreach c, $(clients), $@.$(s).$(c))) -f $(mkfile_path)
+	# $(MAKE) $(foreach s, $(servers), $(foreach c, $(clients), $@.$(s).$(c))) -f $(mkfile_path)
+	$(foreach s, $(servers), $(foreach c, $(clients), $(MAKE) clean $@.$(s).$(c) -f $(mkfile_path)))
 
 l7test: clean ## make all l7 test
 	$(foreach f, $(l7), $(MAKE) $(f) -f $(mkfile_path); sleep 120;)
@@ -109,7 +129,7 @@ l7test: clean ## make all l7 test
 $(foreach t, $(outsvc),\
 $(foreach f, $($(t)),\
 $(foreach s, $(servers), $(t).$(f).$(s)))): ## type.service.server example: make nodec_ip=172.16.84.79 l7_nodeport.nodecluster.64u-c6ne-euler
-	$(MAKE) deploy.perf-nginx.$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@)).$(word 3, $(subst ., ,$@))-server:true.1.1 \
+	$(MAKE) deploy.perf-nginx.$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@)).$(word 3, $(subst ., ,$@))-server:true.1.$(PODS) \
 		svc.$(word 2, $(subst ., ,$@)).$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@)).$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@)).1.1 -f $(mkfile_path)
 	prometheus_url=$${prometheus_url:-http://`kubectl get svc prometheus-server-1 -ojsonpath="{..ip}"`:9090} \
 	server=$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@))-1 nodec_ip=$(nodec_ip) service=$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@))-1 \
@@ -121,7 +141,7 @@ $(foreach f, $($(t)),\
 $(foreach s, $(servers), $(t).$(f).$(s)))): ## type.service.server example: make nodec_ip=172.16.84.79 l7_http.lbv2http.64u-c6ne-euler
 	$(MAKE)	svc.$(word 2, $(subst ., ,$@)).$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@)).$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@)).1.1 \
 		ingress.$(word 2, $(subst ., ,$@)).$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@)).$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@)).1.1 \
-		deploy.perf-nginx.$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@)).$(word 3, $(subst ., ,$@))-server:true.1.1 -f $(mkfile_path)
+		deploy.perf-nginx.$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@)).$(word 3, $(subst ., ,$@))-server:true.1.$(PODS) -f $(mkfile_path)
 	prometheus_url=$${prometheus_url:-http://`kubectl get svc prometheus-server-1 -ojsonpath="{..ip}"`:9090} \
 	server=$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@))-1 nodec_ip=$(nodec_ip) service=$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@))-1 \
 	qps=$(QPS) connect=$(CONNECT) \
@@ -129,7 +149,8 @@ $(foreach s, $(servers), $(t).$(f).$(s)))): ## type.service.server example: make
 
 $(foreach t, $(outsvc) $(outingress),\
 $(foreach f, $($(t)), $(t).$(f))): ## type.service example: make nodec_ip=172.16.84.79 l7_nodeport.nodecluster
-	$(MAKE) $(foreach s, $(servers), $@.$(s)) -f $(mkfile_path)
+	# $(MAKE) $(foreach s, $(servers), $@.$(s)) -f $(mkfile_path)
+	$(foreach s, $(servers), $(MAKE) clean $@.$(s) -f $(mkfile_path);)
 
 $(foreach t, $(outsvc) $(outingress), $(t)):
 	$(MAKE) $(foreach f, $($@), $@.$(f)) -f $(mkfile_path)
