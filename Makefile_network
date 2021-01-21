@@ -110,7 +110,7 @@ l4test: clean ## make all l4 test
 $(foreach f, $(l7),\
 $(foreach s, $(servers),\
 $(foreach c, $(clients), $(f).$(s).$(c)))): ##  shortpod.server.client
-	$(MAKE) deploy.perf-nginx.server-$(word 2, $(subst ., ,$@)).$(word 2, $(subst ., ,$@))-server:true.1.1 \
+	$(MAKE) deploy.perf-nginx.server-$(word 2, $(subst ., ,$@)).$(word 2, $(subst ., ,$@))-server:true.1.$(PODS) \
 		svc.svc.server-$(word 2, $(subst ., ,$@)).server-$(word 2, $(subst ., ,$@)).1.1 \
 		deploy.perf-fortio.client-$(word 3, $(subst ., ,$@)).$(word 3, $(subst ., ,$@))-client:true.1.1 -f $(mkfile_path)
 

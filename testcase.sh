@@ -1,8 +1,21 @@
 bash script/prometheus_register.sh
-#make l7test servers=c6ne-16u-centos clients=c6ne-16u-centos
-#make l7test servers=c6ne-32u-centos clients=c6ne-32u-centos
-make PODS=2 l7test servers=c6ne-64u-centos clients=c6ne-64u-centos
 
-#make outtest servers=c6ne-16u-centos -f Makefile_network
-#make outtest servers=c6ne-32u-centos -f Makefile_network
-make PODS=10 outtest servers=c6ne-64u-centos -f Makefile_network
+mkdir -p logs
+make PODS=1 l7test servers=c6-64u-centos clients=c6-64u-centos
+mv logs logs_01
+mkdir -p logs
+make PODS=2 l4test servers=c6-64u-centos clients=c6-64u-centos
+mv logs logs_02
+mkdir -p logs
+make PODS=1 l7test servers=c6-64u-centos clients=c6-64u-centos
+mv logs logs_03
+mkdir -p logs
+make PODS=10 l7test servers=c6-64u-centos clients=c6-64u-centos
+mv logs logs_04
+mkdir -p logs
+make PODS=1 outtest servers=c6-64u-centos -f Makefile_network
+mv logs logs_05
+mkdir -p logs
+make PODS=10 outtest servers=c6-64u-centos -f Makefile_network
+mv logs logs_06
+

@@ -7,7 +7,9 @@ podsclient_name=`kubectl get pods -l app=$client -ojsonpath="{range .items[*]}{.
 nodesclient_ip=`kubectl get pods -l app=$client -ojsonpath="{range .items[*]}{..hostIP}{' '}{end}"|tr ' ' '\n'|sort|uniq`
 
 kubectl exec $podserver_name -- sh -c 'pkill bash; pkill iperf'
+for podclient_name in $podsclient_name; do
 kubectl exec $podclient_name -- pkill iperf
+done
 sleep 60
 currentTimeStamp=`date +%s.%2N`
 sleep 60
