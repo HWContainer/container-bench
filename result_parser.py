@@ -20,6 +20,7 @@ def dump(keys, items, file_name=None):
                 f.write("\n")
 
 def parser_fortio_logs(file):
+    print(file)
     case_list = []
     # errors, metrics, (url, connect), latency
     case = [{}, {}, ("-","-")]

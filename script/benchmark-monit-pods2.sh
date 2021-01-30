@@ -14,6 +14,9 @@ function checkPodsRunning(){
     pre_running=0
     pre_completed=0
     pre_target=0
+    target=0
+    pre_eni=0
+    pre_subeni=0
     while [[ ! -f finish ]];do
         if [[ -f start ]]; then 
             echo "at `date +%Y-%m-%d' '%H:%M:%S.%N`: receive presure start"
@@ -27,7 +30,11 @@ function checkPodsRunning(){
         nodes=`echo "$allnode" | grep -v "NAME" | wc -l`
         ready=`echo "$allnode" | grep -v "NAME" |grep -w True| wc -l`
         taint=`echo "$allnode" | grep -v "NAME" |grep -w True| grep -v map| wc -l`
-        target=`kubectl get hpa ${NAMESPACE} |grep ${BASE_NAME}|grep -oP '\d+%/'|grep -oP '\d+'` 
+        #target=`kubectl get hpa ${NAMESPACE} |grep ${BASE_NAME}|grep -oP '\d+%/'|grep -oP '\d+'` 
+        alleni=`kubectl get pni -ojsonpath='{range .items[*]}{.metadata.name}{"\t"}{..labels}{"\t"}{"\n"}' -nkube-system`
+        eni=`echo "$alleni" | grep -v master-eni| wc -l`
+        subeni=`echo "$alleni" | grep master-eni| wc -l`
+
         ret=`kubectl get pod ${NAMESPACE} | grep ${BASE_NAME}| grep -v "NAME"`
         
         finishedPods=`echo "$ret" |grep ${BASE_NAME} | wc -l`
@@ -43,8 +50,8 @@ function checkPodsRunning(){
         completed=$finishedPods
 
 
-        if [[ ${nodes} -ne ${pre_nodes} ]] || [[ ${ready} -ne ${pre_ready} ]] || [[ ${taint} -ne ${pre_taint} ]] || [[ ${running} -ne ${pre_running} ]] || [[ ${scheduled} -ne ${pre_scheduled} ]] || [[ ${created} -ne ${pre_created} ]] || [[ ${target} -ne ${pre_target} ]] || [[ ${completed} -ne ${pre_completed} ]]; then
-            echo "at `date +%Y-%m-%d' '%H:%M:%S.%N`: $nodes $ready $taint $target $created $scheduled $running $completed"
+        if [[ ${nodes} -ne ${pre_nodes} ]] || [[ ${ready} -ne ${pre_ready} ]] || [[ ${taint} -ne ${pre_taint} ]] || [[ ${running} -ne ${pre_running} ]] || [[ ${scheduled} -ne ${pre_scheduled} ]] || [[ ${created} -ne ${pre_created} ]] || [[ ${target} -ne ${pre_target} ]] || [[ ${completed} -ne ${pre_completed} ]] || [[ ${eni} -ne ${pre_eni} ]] || [[ ${subeni} -ne ${pre_subeni} ]]; then
+            echo "at `date +%Y-%m-%d' '%H:%M:%S.%N`: $nodes $ready $taint $eni $subeni $created $scheduled $running $completed"
             pre_nodes=$nodes
             pre_ready=$ready
             pre_taint=$taint
@@ -53,6 +60,8 @@ function checkPodsRunning(){
             pre_created=$created
             pre_completed=$completed
             pre_target=$target
+            pre_eni=$eni
+            pre_subeni=$subeni
         fi
     done
     echo "All pods Completed:        `date +%Y-%m-%d' '%H:%M:%S.%N`"
@@ -110,7 +119,7 @@ date +%Y-%m-%d' '%H:%M:%S > begin
 echo "Test start:              `date +%Y-%m-%d' '%H:%M:%S.%N`"
 echo "namespace: $NAMESPACE"
 echo "      app: $BASE_NAME"
-echo "at <date>: nodes ready readytaint target created sechuded running completed"
+echo "at <date>: nodes ready readytaint eni subeni created sechuded running completed"
 echo "---------------------------------------------"
 checkPodsRunning
 echo "Test finished:           `date +%Y-%m-%d' '%H:%M:%S.%N`"

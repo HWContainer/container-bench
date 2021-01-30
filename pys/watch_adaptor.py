@@ -29,15 +29,16 @@ def parser_watch_log(file):
         kwargs = {}
     with open(*args, **kwargs) as f:
         for l in f:
-            a = re.match(r"at\s\S+\s(\S+\.\S+)\S{8}:\s(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)", l)
+            a = re.match(r"at\s\S+\s(\S+\.\S+)\S{8}:\s(.*)", l)
             if a:
                 ori_list.append([datetime.strptime(a.group(1), "%H:%M:%S.%f"),
-                                 [a.group(2), a.group(3), a.group(4), a.group(5), a.group(6), a.group(7)]])
+                                 a.group(2)])
     return ori_list
 
 
 new_list = adapt_static(parser_watch_log("result.txt"))
 for item in new_list:
-    print(item[0].strftime("%H:%M:%S"), *item[1])
+    mt = item[1]
+    print("{} {}".format(item[0].strftime("%H:%M:%S"), mt))
 
 

@@ -180,6 +180,8 @@ clean: ## clean deploy pod and pvc
 
 count: ## count node for each pod
 	kubectl get pods -n $(namespace) -owide|awk '{print $$7}'|tr -s ' ' '\n'|sort |uniq -c|sort -r |awk '{print $$2, $$1}'
+count2: 
+	kubectl get pods -n $(namespace) -owide|awk '{print $$7"-"$$3}'|tr -s ' ' '\n'|sort |uniq -c|sort -r |awk '{print $$2, $$1}'
 
 1: ## create one pod
 	. $(current_dir)/script/get_token.sh; \

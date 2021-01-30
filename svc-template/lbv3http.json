@@ -10,7 +10,6 @@
         "namespace": "NAMESPACE"
     },
     "spec": {
-        "externalTrafficPolicy": "Cluster",
         "ports": [
             {
                 "name": "cce-service-0",
@@ -23,7 +22,7 @@
             "app": "POD_NAME"
         },
         "sessionAffinity": "None",
-        "type": "NodePort"
+        "type": "ClusterIP"
     }
 }
 

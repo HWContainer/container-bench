@@ -13,11 +13,11 @@ export $(shell sed 's/=.*//' $(cnf))
 
 help: ## This help.
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_0-9-]+.*:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-	@echo "$(foreach t, $(outingress) $(outsvc), $(foreach f, $($(t)), $(foreach s, $(servers),$(t).$(f).$(s))))"|tr ' ' '\n'|xargs -i echo {}|awk {'printf "\033[36m%-40s\033[0m %s\n", $$1, "out test"'}
+	@echo "$(foreach t, $(outingress) $(outsvc) $(outpod), $(foreach f, $($(t)), $(foreach s, $(servers),$(t).$(f).$(s))))"|tr ' ' '\n'|xargs -i echo {}|awk {'printf "\033[36m%-40s\033[0m %s\n", $$1, "out test"'}
 	@echo "$(foreach f, $(l4), $(foreach s, $(servers), $(foreach c, $(clients),$(f).$(s).$(c))))"|tr ' ' '\n'|xargs -i echo {}|awk {'printf "\033[36m%-40s\033[0m %s\n", $$1, "l4 test"'}
 	@echo "$(foreach f, $(l7), $(foreach s, $(servers), $(foreach c, $(clients), $(f).$(s).$(c))))"|tr ' ' '\n'|xargs -i echo {}|awk {'printf "\033[36m%-40s\033[0m %s\n", $$1, "l7 test"'}
-	@echo $(foreach t, $(outsvc) $(outingress), $(foreach f, $($(t)), $(t).$(f))) |tr ' ' '\n'|xargs -i echo {}|awk {'printf "\033[36m%-40s\033[0m %s\n", $$1, "out test"'}
-	@echo $(foreach t, $(outsvc) $(outingress), $(t)) |tr ' ' '\n'|xargs -i echo {}|awk {'printf "\033[36m%-40s\033[0m %s\n", $$1, "out test"'}
+	@echo $(foreach t, $(outpod) $(outsvc) $(outingress), $(foreach f, $($(t)), $(t).$(f))) |tr ' ' '\n'|xargs -i echo {}|awk {'printf "\033[36m%-40s\033[0m %s\n", $$1, "out test"'}
+	@echo $(foreach t, $(outpod) $(outsvc) $(outingress), $(t)) |tr ' ' '\n'|xargs -i echo {}|awk {'printf "\033[36m%-40s\033[0m %s\n", $$1, "out test"'}
 
 .DEFAULT_GOAL := help
 
@@ -28,10 +28,12 @@ clients ?= 64u-c6ne-euler
 CONNECT ?= 64
 QPS ?= 0
 PODS ?= 1
+l7_pod = pod
 l7_nodeport = nodecluster nodelocal
 l7_lb = lbv2 lbv3
 l7_http = lbv2http lbv3http
 l7_https = lbv2https lbv3https
+outpod = l7_pod
 outsvc = l7_nodeport l7_lb
 outingress = l7_http l7_https
 
@@ -126,6 +128,17 @@ $(l7): ## shortpod shortsvc longpod longsvc
 l7test: clean ## make all l7 test
 	$(foreach f, $(l7), $(MAKE) $(f) -f $(mkfile_path); sleep 120;)
 
+$(foreach t, $(outpod),\
+$(foreach f, $($(t)),\
+$(foreach s, $(servers), $(t).$(f).$(s)))): ## type.service.server example: make nodec_ip=172.16.84.79 l7_pod.pod.64u-c6ne-euler
+	$(MAKE) deploy.perf-nginx.$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@)).$(word 3, $(subst ., ,$@))-server:true.1.$(PODS) \
+		svc.$(word 2, $(subst ., ,$@)).$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@)).$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@)).1.1 -f $(mkfile_path)
+	prometheus_url=$${prometheus_url:-http://`kubectl get svc prometheus-server-1 -ojsonpath="{..ip}"`:9090} \
+	server=$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@))-1 nodec_ip=$(nodec_ip) service=$(word 2, $(subst ., ,$@))-$(word 3, $(subst ., ,$@))-1 \
+	qps=$(QPS) connect=$(CONNECT) \
+	bash -x $(current_dir)script2/out_$(word 1, $(subst ., ,$@)).sh 2>logs/$@.log 1>&2
+
+
 $(foreach t, $(outsvc),\
 $(foreach f, $($(t)),\
 $(foreach s, $(servers), $(t).$(f).$(s)))): ## type.service.server example: make nodec_ip=172.16.84.79 l7_nodeport.nodecluster.64u-c6ne-euler
@@ -147,13 +160,17 @@ $(foreach s, $(servers), $(t).$(f).$(s)))): ## type.service.server example: make
 	qps=$(QPS) connect=$(CONNECT) \
 	bash -x $(current_dir)script2/out_$(word 1, $(subst ., ,$@)).sh 2>logs/$@.log 1>&2
 
-$(foreach t, $(outsvc) $(outingress),\
+$(foreach t, $(outpod) $(outsvc) $(outingress),\
 $(foreach f, $($(t)), $(t).$(f))): ## type.service example: make nodec_ip=172.16.84.79 l7_nodeport.nodecluster
 	# $(MAKE) $(foreach s, $(servers), $@.$(s)) -f $(mkfile_path)
 	$(foreach s, $(servers), $(MAKE) clean $@.$(s) -f $(mkfile_path);)
 
-$(foreach t, $(outsvc) $(outingress), $(t)):
+$(foreach t, $(outpod) $(outsvc) $(outingress), $(t)):
 	$(MAKE) $(foreach f, $($@), $@.$(f)) -f $(mkfile_path)
 
 outtest: clean ## test for outsize cluster
-	$(MAKE) $(foreach t, $(outsvc) $(outingress), $(t)) -f $(mkfile_path)
+	$(MAKE) $(foreach t, $(outpod) $(outsvc) $(outingress), $(t)) -f $(mkfile_path)
+
+watch: ## monit pods to record scaling
+	bash $(current_dir)/script2/benchmark-monit-pods2.sh --namespace A --name perf-test
+
