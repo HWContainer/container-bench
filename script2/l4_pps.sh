@@ -21,10 +21,14 @@ done
 
 currentTimeStamp=`date +%s.%2N`
 kubectl exec $podserver_name -- sh -c 'cd /home/paas; bash ./pps_server_iperf.sh 1>/logs.iperf 2>&1; bash ./get_pps.sh eth0 1>pps.log 2>&1 &'
+i=0
 for podclient_name in $podsclient_name; do
+port_start="$((5000+$((i*48))))"
+port_stop="$((5000+$(($((i+1))*48))))"
 {
-kubectl exec $podclient_name -- sh -c 'cd /home/paas; bash ./pps_client_iperf.sh '$podserver_ip' 1>/logs.iperf 2>&1'
+kubectl exec $podclient_name -- sh -c 'cd /home/paas; sed -i "s/5000/'"${port_start}"'/g" pps_client_iperf.sh;sed -i "s/5096/'"${port_stop}"'/g" pps_client_iperf.sh ;bash ./pps_client_iperf.sh '$podserver_ip' 1>/logs.iperf 2>&1'
 } &
+i=$((i+1))
 done
 wait 
 
@@ -36,9 +40,9 @@ python query_csv.py $prometheus_url $currentTimeStamp $nodeclient_ip
 done
 
 
-kubectl exec $podserver_name -- sh -c 'pkill bash; pkill iperf'
+kubectl exec $podserver_name -- sh -c 'pkill bash; pkill -9 iperf'
 for podclient_name in $podsclient_name; do
-kubectl exec $podclient_name -- pkill iperf
+kubectl exec $podclient_name -- pkill -9 iperf
 done
 kubectl exec $podserver_name -- sh -c 'cd /home/paas; cat pps.log'
 

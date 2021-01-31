@@ -1,10 +1,10 @@
-swr=swr.cn-south-1.myhuaweicloud.com/container_perf
-baseimage=perf-nginx:v10
+swr=swr.cn-east-3.myhuaweicloud.com/paas_perf
+baseimage=perf-nginx:v10.1
 image=perf-nginx:v10-test
-perf-nginx=perf-nginx:v10
-perf-density=perf-nginx:v10
+perf-nginx=perf-nginx:v10.1
+perf-density=perf-nginx:v10.1
 perf-fortio=fortio
-serverimage=perf-nginx:v10
+serverimage=perf-nginx:v10.1
 fortioimage=fortio
 processimage=process-exporter-0602-1
 nodeimage=node-exporter:v1.0.1
