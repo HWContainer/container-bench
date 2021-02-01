@@ -17,7 +17,15 @@ python query_csv.py $prometheus_url $currentTimeStamp $nodeclient_ip
 done
 
 currentTimeStamp=`date +%s.%2N`
-kubectl exec $podclient_name -- /usr/bin/fortio load -qps $qps -c $connect -t 120s --keepalive=false http://$server
+for nodeclient_name in $podsclient_name; do
+{
+kubectl exec $podclient_name -- /usr/bin/fortio load -qps $qps -c $connect -t 120s --keepalive=false http://$server > $nodeclient_name.log
+} &
+done
+wait
+for nodeclient_name in $podsclient_name; do
+cat $nodeclient_name.log
+done
 sleep 30
 
 for nodeserver_ip in $nodesserver_ip; do
