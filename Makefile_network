@@ -163,7 +163,7 @@ $(foreach f, $($(t)),\
 $(foreach s, $(servers), $(t).$(f).$(s)))): ## type.service.server example: make nodec_ip=172.16.84.79 l7_pod.pod.container.64u-c6ne-euler
 	$(MAKE) deploy.perf-nginx.$(word 2, $(subst ., ,$@))-$(word 4, $(subst ., ,$@)).$(word 4, $(subst ., ,$@))-server:true.1.$(PODS) -f $(mkfile_path)
 	$(MAKE) server=$(word 2, $(subst ., ,$@))-$(word 4, $(subst ., ,$@))-1 service=$(word 2, $(subst ., ,$@))-$(word 4, $(subst ., ,$@))-1 \
-		$(word 1, $(subst ., ,$@)).invoke 2>logs/$@.log 1>&2
+		$(word 1, $(subst ., ,$@)).invoke 2>logs/$@.log 1>&2 --f $(mkfile_path)
 
 
 $(foreach t, $(outsvc),\
@@ -172,7 +172,7 @@ $(foreach s, $(servers), $(t).$(f).$(s)))): ## type.service.server example: make
 	$(MAKE) deploy.perf-nginx.$(word 2, $(subst ., ,$@))-$(word 4, $(subst ., ,$@)).$(word 4, $(subst ., ,$@))-server:true.1.$(PODS) \
 		svc.$(word 2, $(subst ., ,$@)).$(word 2, $(subst ., ,$@))-$(word 4, $(subst ., ,$@)).$(word 2, $(subst ., ,$@))-$(word 4, $(subst ., ,$@)).1.1 -f $(mkfile_path)
 	$(MAKE) server=$(word 2, $(subst ., ,$@))-$(word 4, $(subst ., ,$@))-1 service=$(word 2, $(subst ., ,$@))-$(word 4, $(subst ., ,$@))-1 \
-		$(word 1, $(subst ., ,$@)).invoke 2>logs/$@.log 1>&2
+		$(word 1, $(subst ., ,$@)).invoke 2>logs/$@.log 1>&2 -f $(mkfile_path)
 
 $(foreach t, $(outingress),\
 $(foreach f, $($(t)),\
@@ -181,7 +181,7 @@ $(foreach s, $(servers), $(t).$(f).$(s)))): ## type.service.server example: make
 		ingress.$(word 2, $(subst ., ,$@)).$(word 2, $(subst ., ,$@))-$(word 4, $(subst ., ,$@)).$(word 2, $(subst ., ,$@))-$(word 4, $(subst ., ,$@)).1.1 \
 		deploy.perf-nginx.$(word 2, $(subst ., ,$@))-$(word 4, $(subst ., ,$@)).$(word 4, $(subst ., ,$@))-server:true.1.$(PODS) -f $(mkfile_path)
 	$(MAKE) server=$(word 2, $(subst ., ,$@))-$(word 4, $(subst ., ,$@))-1 service=$(word 2, $(subst ., ,$@))-$(word 4, $(subst ., ,$@))-1 \
-		$(word 1, $(subst ., ,$@)).invoke 2>logs/$@.log 1>&2
+		$(word 1, $(subst ., ,$@)).invoke 2>logs/$@.log 1>&2 -f $(mkfile_path)
 
 $(foreach t, $(outpod) $(outsvc) $(outingress) $(outpod_host) $(outsvc_host) $(outingress_host), $(t).invoke): ## make server=<server> service=<service> QPS=<qps> CONNECT=<connect> l7_http.invoke
 	prometheus_url=$${prometheus_url:-http://`kubectl get svc prometheus-server-1 -ojsonpath="{..ip}"`:9090} \
