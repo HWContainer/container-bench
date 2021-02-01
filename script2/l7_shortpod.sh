@@ -19,7 +19,7 @@ currentTimeStamp=`date +%s.%2N`
 
 for podclient_name in $podsclient_name; do
 {
-kubectl exec $podclient_name -- /usr/bin/fortio load -qps $qps -c $connect -t 120s --keepalive=false http://$podserver_ip
+kubectl exec $podclient_name -- /usr/bin/fortio load -qps $qps -c $connect -t 120s --keepalive=false http://$podserver_ip > $podclient_name.log
 } &
 done
 wait
