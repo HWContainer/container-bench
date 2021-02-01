@@ -235,6 +235,7 @@ def parser_fortio_logs(file):
 
     keys = []
     #keys = ["dockerd", "kubelet", "envoy", "pilot-discovery", "pilot-agent", "kube-proxy", "process"]
+    keys = ["nginx", "fortio"]
     if not keys:
         for c in case_list:
             if 'serverfortio mem' in c[1].keys():
@@ -250,9 +251,7 @@ def parser_fortio_logs(file):
     #for k, v in dict_values.items():
     #    if all([x=='0.00' for x in v]):
     #        keys.remove(k)
-    keys.remove('process')
     keys.insert(0, 'node')
-    keys.insert(0, 'process')
     dump(["process cpu"]+keys, sorted([[node]+ [format(float(kv.get(k,'0')), ".2f") for k in keys] 
                                        for c in case_list 
                                            if 'serverfortio mem' not in c[1].keys() 
@@ -261,6 +260,7 @@ def parser_fortio_logs(file):
 
     keys = []
     #keys = ["nodemem", "envoymem", "pilot-discoverymem", "pilot-agentmem", "dockerdmem", "containerd-shimmem", "kubeletmem", "processmem"]
+    keys = ["nodemem", "nginxmem", "fortiomem"]
     if not keys:
         for c in case_list:
             if 'serverfortio mem' in c[1].keys():
