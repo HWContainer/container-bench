@@ -47,7 +47,7 @@ def get_metrics(t, params):
     writer.writerow(["name", "timestamp", t])
     
     for result in results:
-        podname=result['metric'].get('pod_name', result['metric'].get('groupname', result['metric'].get('mode', 'total')))
+        podname=result['metric'].get('pod_name', result['metric'].get('groupname', result['metric'].get('mode', result['metric'].get('device', 'total'))))
         for l in result['values']:
         	writer.writerow([podname]+l)
         print("{} {} max {}".format(podname, t, max([float(l[1]) for l in result['values']])))
@@ -81,6 +81,9 @@ if len(sys.argv) == 4:
         + '"}[1m])) by(groupname)))'
     top_process_mem={'query': q}
 
+    pps={'query': 'rate(node_network_receive_packets_total{instance=~"'+"{}:.*".format(host)+'"}[30s]) +rate(node_network_transmit_packets_total{instance=~"'+"{}:.*".format(host)+'"}[30s]) !=0'}
+    top_pps={'query': 'sum(rate(node_network_receive_packets_total{instance=~"'+"{}:.*".format(host)+'"}[30s]) +rate(node_network_transmit_packets_total{instance=~"'+"{}:.*".format(host)+'"}[30s]) !=0) by (device)'}
+
     node_cpu.update(params)
     get_metrics(host+'node cpu', node_cpu)
     top_node_cpu.update(params)
@@ -95,4 +98,6 @@ if len(sys.argv) == 4:
     get_metrics(host+'process mem', process_mem)
     top_process_mem.update(params)
     get_metrics(host+'topprocess mem', top_process_mem)
+    pps.update(params)
+    get_metrics(host+'node pps', pps)
 

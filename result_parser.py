@@ -155,6 +155,16 @@ def parser_fortio_logs(file):
                     node[p[2]+'mem']=p[3]
                     continue
                 continue
+            if 'pps max' in i:
+                p = re.findall(r'\S+ (\d+\.\d+\.\d+\.\d+)(\w+) pps max ([\d\.]+)', i)
+                if p:
+                    p = p[0]
+                    case[1].setdefault(p[0], {})
+                    node=case[1][p[0]]
+                    if float(node.get(p[1]+'pps', '0')) < float(p[2]):
+                        node[p[1]+'pps']=p[2]
+                    continue
+                continue
             if 'cpu max' in i:
                 p = re.findall(r'asm-(\w+)-1(.*) (\w+ cpu) max ([\d\.]+)', i)
                 if p:
@@ -227,11 +237,11 @@ def parser_fortio_logs(file):
         for node, v in c[1].items():
             keys += [k for k in v.keys() if 'node' in k ]
     keys=sorted(list(set(keys)))
-    dump(["node cpu"]+[k.replace('node ', '') for k in keys], sorted([[node]+ [format(float(kv.get(k,'0')), ".2f") for k in keys] 
+    dump(["node cpu"]+[k.replace('node ', '') for k in keys], [[node]+ [format(float(kv.get(k,'0')), ".2f") for k in keys] 
                                        for c in case_list 
                                            if 'serverfortio mem' not in c[1].keys() 
                                                for node, kv in c[1].items()
-                                   ], key=lambda x: x[0]))
+                                   ])
 
     keys = []
     #keys = ["dockerd", "kubelet", "envoy", "pilot-discovery", "pilot-agent", "kube-proxy", "process"]
@@ -248,15 +258,17 @@ def parser_fortio_logs(file):
     for k in keys:
         values = [format(float(kv.get(k,'0')), ".2f") for c in case_list if 'serverfortio mem' not in c[1].keys() for node, kv in c[1].items()]
         dict_values[k] = values
-    #for k, v in dict_values.items():
-    #    if all([x=='0.00' for x in v]):
-    #        keys.remove(k)
+    for k, v in dict_values.items():
+        if all([x=='0.00' for x in v]):
+            keys.remove(k)
+    keys.insert(0, 'node system')
+    keys.insert(0, 'node softirq')
     keys.insert(0, 'node')
-    dump(["process cpu"]+keys, sorted([[node]+ [format(float(kv.get(k,'0')), ".2f") for k in keys] 
+    dump(["process cpu"]+keys, [[node]+ [format(float(kv.get(k,'0')), ".2f") for k in keys] 
                                        for c in case_list 
                                            if 'serverfortio mem' not in c[1].keys() 
                                                for node, kv in c[1].items()
-                                   ], key=lambda x: x[0]))
+                                   ])
 
     keys = []
     #keys = ["nodemem", "envoymem", "pilot-discoverymem", "pilot-agentmem", "dockerdmem", "containerd-shimmem", "kubeletmem", "processmem"]
@@ -269,11 +281,26 @@ def parser_fortio_logs(file):
                 keys += [k for k in v.keys() if 'mem' in k ]
         keys=sorted(list(set(keys)))
     #print(keys)
-    dump(["process mem"]+[k.replace('mem', '') for k in keys], sorted([[node]+ [format(float(kv.get(k,'0'))/1024/1024, ".2f") for k in keys] 
+    dump(["process mem"]+[k.replace('mem', '') for k in keys], [[node]+ [format(float(kv.get(k,'0'))/1024/1024, ".2f") for k in keys] 
                                        for c in case_list 
                                            if 'serverfortio mem' not in c[1].keys() 
                                                for node, kv in c[1].items()
-                                   ], key=lambda x: x[0]))
+                                   ])
+    keys = ["nodepps"]
+    if not keys:
+        for c in case_list:
+            if 'serverfortio mem' in c[1].keys():
+                continue
+            for node, v in c[1].items():
+                keys += [k for k in v.keys() if 'mem' in k ]
+        keys=sorted(list(set(keys)))
+    #print(keys)
+    dump(["process pps"]+[k.replace('pps', '') for k in keys], [[node]+ [format(float(kv.get(k,'0')), ".2f") for k in keys] 
+                                       for c in case_list 
+                                           if 'serverfortio mem' not in c[1].keys() 
+                                               for node, kv in c[1].items()
+                                   ])
+    
     
 base_name='perf-test'
 if len(sys.argv) > 1:

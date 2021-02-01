@@ -1,21 +1,27 @@
-bash script/prometheus_register.sh
 
 mkdir -p logs
-make PODS=1 l7test servers=c6-64u-centos clients=c6-64u-centos
-mv logs logs_01
-mkdir -p logs
-make PODS=2 l4test servers=c6-64u-centos clients=c6-64u-centos
-mv logs logs_02
-mkdir -p logs
-make PODS=1 l7test servers=c6-64u-centos clients=c6-64u-centos
-mv logs logs_03
-mkdir -p logs
-make PODS=10 l7test servers=c6-64u-centos clients=c6-64u-centos
-mv logs logs_04
-mkdir -p logs
-make PODS=1 outtest servers=c6-64u-centos -f Makefile_network
-mv logs logs_05
-mkdir -p logs
-make PODS=10 outtest servers=c6-64u-centos -f Makefile_network
-mv logs logs_06
+#make CONNECT=256 PODS=1 servers=perf outtest -f Makefile_network
+#make clean -f Makefile_network
 
+make CONNECT=256 PODS=1 servers=perf clients=perf l7test -f Makefile_network
+make clean -f Makefile_network
+
+mv logs logs_container
+
+mkdir -p logs
+make CONNECT=256 PODS=1 servers=perf outtest_host -f Makefile_network
+make clean -f Makefile_network
+
+make CONNECT=256 PODS=1 servers=perf clients=perf l7hosttest -f Makefile_network
+make clean -f Makefile_network
+
+mv logs logs_host
+
+mkdir -p logs
+make CONNECT=256 PODS=21 servers=perf outtest -f Makefile_network
+make clean -f Makefile_network
+
+make CONNECT=256 PODS=21 servers=perf l7test -f Makefile_network
+make clean -f Makefile_network
+
+mv logs logs_container_21
