@@ -1,7 +1,7 @@
 
 mkdir -p logs
-#make CONNECT=256 PODS=1 servers=perf outtest -f Makefile_network
-#make clean -f Makefile_network
+make CONNECT=256 PODS=1 servers=perf outtest -f Makefile_network
+make clean -f Makefile_network
 
 make CONNECT=256 PODS=1 servers=perf clients=perf l7test -f Makefile_network
 make clean -f Makefile_network
@@ -21,7 +21,7 @@ mkdir -p logs
 make CONNECT=256 PODS=21 servers=perf outtest -f Makefile_network
 make clean -f Makefile_network
 
-make CONNECT=256 PODS=21 servers=perf l7test -f Makefile_network
+make CONNECT=256 PODS=21 servers=perf clients=perf l7test -f Makefile_network
 make clean -f Makefile_network
 
 mv logs logs_container_21
