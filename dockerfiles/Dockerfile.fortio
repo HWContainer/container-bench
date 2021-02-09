@@ -1,1 +1,1 @@
-FROM swr.cn-north-4.myhuaweicloud.com/asm/fortio:latest
+FROM swr.cn-east-3.myhuaweicloud.com/paas_perf/fortio:1.11.5

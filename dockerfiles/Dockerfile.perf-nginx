@@ -1,4 +1,4 @@
-FROM swr.cn-north-4.myhuaweicloud.com/perf-1/perf-nginx:v9
-ADD check-network.sh /
-ADD get_pps.sh /home/paas
-RUN chmod +x /home/paas/get_pps.sh
+FROM swr.cn-east-3.myhuaweicloud.com/paas_perf/perf-nginx:v10.1
+#ADD check-network.sh /
+#ADD get_pps.sh /home/paas
+#RUN chmod +x /home/paas/get_pps.sh

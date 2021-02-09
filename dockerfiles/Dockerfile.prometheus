@@ -1,1 +1,1 @@
-FROM swr.cn-north-4.myhuaweicloud.com/perf-1/prometheus:latest
+FROM swr.cn-east-3.myhuaweicloud.com/paas_perf/prometheus:latest
