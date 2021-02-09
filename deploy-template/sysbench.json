@@ -1,0 +1,65 @@
+{
+  "apiVersion": "apps/v1",
+  "kind": "Deployment",
+  "metadata": {
+    "name": "POD_NAME",
+    "namespace": "NAMESPACE"
+  },
+  "spec": {
+    "progressDeadlineSeconds": 600,
+    "replicas": 1,
+    "revisionHistoryLimit": 10,
+    "selector": {
+      "matchLabels": {
+        "app": "POD_NAME"
+      }
+    },
+    "strategy": {
+      "type": "Recreate"
+    },
+    "template": {
+      "metadata": {
+        "annotations": {
+          "cri.cci.io/container-type": "secure-container",
+          "log.stdoutcollection.kubernetes.io": "{\"collectionContainers\": [\"container-0\"]}",
+          "metrics.alpha.kubernetes.io/custom-endpoints": "[{api:'',path:'',port:'',names:''}]"
+        },
+        "labels": {
+          "app": "POD_NAME"
+        }
+      },
+      "spec": {
+        "containers": [
+          {
+            "image": "POD_IMAGE",
+            "imagePullPolicy": "IfNotPresent",
+            "args": [
+              "-c",
+              "while true; do sleep 10; done"
+            ],
+            "command": ["/bin/bash"],
+            "name": "container-0",
+            "resources": {
+              "requests": {
+                "cpu": "1"
+              }
+            },
+            "terminationMessagePath": "/dev/termination-log",
+            "imagePullPolicy": "Always",
+            "terminationMessagePolicy": "File"
+          }
+        ],
+        "imagePullSecrets": [
+          {
+            "name": "default-secret"
+          }
+        ],
+        "restartPolicy": "Always",
+        "schedulerName": "default-scheduler",
+        "securityContext": {},
+        "terminationGracePeriodSeconds": 30
+      }
+    }
+  }
+}
+
