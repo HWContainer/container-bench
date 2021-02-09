@@ -10,6 +10,7 @@ processimage=process-exporter-0602-1
 nodeimage=node-exporter:v1.0.1
 grafanaimage=grafana:7.1.4
 prometheusimage=prometheus
+sysbench=sysbench:1.0.20
 
 namespace=default
 endpoint=https://cci.cn-north-4.myhuaweicloud.com
