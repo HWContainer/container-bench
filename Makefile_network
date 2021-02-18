@@ -63,7 +63,7 @@ clean.%: ## clean obj
 	|tr ' ' '\n'|xargs -i kubectl delete $(lastword $(subst ., ,$@)) -n $(namespace) --ignore-not-found=true --wait=true {}
 
 new_clean.%: ## clean obj
-	kubectl get $(lastword $(word 2, $(subst ., ,$@)) -n $(namespace) -l $(word 3, $(subst ., ,$@))=true -o=jsonpath='{.items[*].metadata.name}' \
+	kubectl get $(word 2, $(subst ., ,$@)) -n $(namespace) -l $(word 3, $(subst ., ,$@))=true -o=jsonpath='{.items[*].metadata.name}' \
 	|tr ' ' '\n'|xargs -i kubectl delete $(word 2, $(subst ., ,$@)) -n $(namespace) --ignore-not-found=true --wait=true {}
 
 label_nodes: ## make label_nodes labels=a:b,c:d to label nodes
