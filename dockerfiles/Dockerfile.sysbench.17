@@ -1,0 +1,4 @@
+FROM swr.cn-east-3.myhuaweicloud.com/paas_perf/centos:8.3.2011
+RUN yum -y install make automake libtool pkgconfig libaio-devel mariadb-devel openssl-devel
+ADD sysbench-1.0.17.tar.gz /
+RUN cd sysbench-1.0.17; autoreconf -ivf; ./configure; make; make install
