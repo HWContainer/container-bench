@@ -13,10 +13,10 @@ export $(shell sed 's/=.*//' $(cnf))
 
 help: ## This help.
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_0-9-]+.*:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-	@echo "$(foreach t, $(outingress) $(outsvc) $(outpod), $(foreach f, $($(t)), $(foreach s, $(servers),$(t).$(f).$(s))))"|tr ' ' '\n'|xargs -i echo {}|awk {'printf "\033[36m%-40s\033[0m %s\n", $$1, "out test"'}
+	@echo "$(foreach t, $(outingress) $(outsvc) $(outpod), $(foreach f, $($(t)), $(foreach s, $(servers),$(t).$(f).$(s))))"|tr ' ' '\n'|xargs -i echo {}|awk {'printf "\033[36m%-40s\033[0m %s%s\n", $$1, "out test, client(outofcluster)->http->", $$1'}
 	@echo "$(foreach f, $(l4), $(foreach s, $(servers), $(foreach c, $(clients),$(f).$(s).$(c))))"|tr ' ' '\n'|xargs -i echo {}|awk {'printf "\033[36m%-40s\033[0m %s\n", $$1, "l4 test"'}
-	@echo "$(foreach f, $(l7container), $(foreach s, $(servers), $(foreach c, $(clients), $(f).$(s).$(c))))"|tr ' ' '\n'|xargs -i echo {}|awk {'printf "\033[36m%-40s\033[0m %s\n", $$1, "l7 test"'}
-	@echo "$(foreach f, $(l7host), $(foreach s, $(servers), $(foreach c, $(clients), $(f).$(s).$(c))))"|tr ' ' '\n'|xargs -i echo {}|awk {'printf "\033[36m%-40s\033[0m %s\n", $$1, "l7 test"'}
+	@echo "$(foreach f, $(l7container), $(foreach s, $(servers), $(foreach c, $(clients), $(f).$(s).$(c))))"|tr ' ' '\n'|xargs -i echo {}|awk {'printf "\033[36m%-40s\033[0m %s %s.<server_nums>.<client_nums>\n", $$1, "l7 test, pod(c)->http->pod(c) : make servers=<prefix1> clients=<perfix2> QPS=<qps> CONNECT=<connect>", $$1'}
+	@echo "$(foreach f, $(l7host), $(foreach s, $(servers), $(foreach c, $(clients), $(f).$(s).$(c))))"|tr ' ' '\n'|xargs -i echo {}|awk {'printf "\033[36m%-40s\033[0m %s %s.<server_nums>.<client_nums>\n", $$1, "l7 test, pod(h)->http->pod(h) : make servers=<prefix> clients=<perfix> QPS=<qps> CONNECT=<connect>", $$1'}
 	@echo $(foreach t, $(outpod) $(outsvc) $(outingress), $(foreach f, $($(t)), $(t).$(f))) |tr ' ' '\n'|xargs -i echo {}|awk {'printf "\033[36m%-40s\033[0m %s\n", $$1, "out test"'}
 	@echo $(foreach t, $(outpod) $(outsvc) $(outingress), $(t)) |tr ' ' '\n'|xargs -i echo {}|awk {'printf "\033[36m%-40s\033[0m %s\n", $$1, "out test"'}
 	@echo $(foreach f, $(l7), $(f).invoke) |tr ' ' '\n'|xargs -i echo {}|awk {'printf "\033[36m%-40s\033[0m %s %s\n", $$1, "make client=<> server=<> QPS=<qps> CONNECT=<connect>", $$1'}
@@ -125,7 +125,7 @@ l4test: clean ## make all l4 test
 $(foreach f, $(l7), $(f).invoke): ## shortpod.invoke
 	prometheus_url=$${prometheus_url:-http://`kubectl get svc prometheus-server-1 -ojsonpath="{..ip}"`:9090} \
 	qps=$(QPS) connect=$(CONNECT) \
-	bash -x $(current_dir)script2/l7_$(word 1, $(subst ., ,$@)).sh 2>logs/$@.log 1>&2
+	bash -x $(current_dir)script2/l7_$(word 1, $(subst ., ,$@)).sh 
 
 $(foreach f, $(l7container),\
 $(foreach s, $(servers),\
@@ -136,6 +136,15 @@ $(foreach c, $(clients), $(f).$(s).$(c)))): ##  shortpod.container.server.client
 
 	$(MAKE) client=client-$(word 4, $(subst ., ,$@))-1 server=server-$(word 3, $(subst ., ,$@))-1 $(word 1, $(subst ., ,$@)).invoke 2>logs/$@.log 1>&2 -f $(mkfile_path)
 
+$(foreach f, $(l7container),\
+$(foreach s, $(servers),\
+$(foreach c, $(clients), $(f).$(s).$(c).%))): ##  shortpod.container.server.client.server_nums.client_nums
+	$(MAKE) deploy.perf-nginx.server-$(word 3, $(subst ., ,$@)).$(word 3, $(subst ., ,$@))-server:true.1.$(word 5, $(subst ., ,$@)) \
+		svc.svc.server-$(word 3, $(subst ., ,$@)).server-$(word 3, $(subst ., ,$@)).1.1 \
+		deploy.perf-fortio.client-$(word 4, $(subst ., ,$@)).$(word 4, $(subst ., ,$@))-client:true.1.$(word 6, $(subst ., ,$@)) -f $(mkfile_path)
+
+	$(MAKE) client=client-$(word 4, $(subst ., ,$@))-1 server=server-$(word 3, $(subst ., ,$@))-1 $(word 1, $(subst ., ,$@)).invoke 2>logs/$@.log 1>&2 -f $(mkfile_path)
+
 $(foreach f, $(l7host),\
 $(foreach s, $(servers),\
 $(foreach c, $(clients), $(f).$(s).$(c)))): ##  shortpod.host.server.client
@@ -143,7 +152,17 @@ $(foreach c, $(clients), $(f).$(s).$(c)))): ##  shortpod.host.server.client
 		svc.svc.serverhost-$(word 3, $(subst ., ,$@)).server-$(word 3, $(subst ., ,$@)).1.1 \
 		deployhost.perf-fortio.clienthost-$(word 4, $(subst ., ,$@)).$(word 4, $(subst ., ,$@))-client:true.1.3 -f $(mkfile_path)
 
-	$(MAKE) client=client-$(word 4, $(subst ., ,$@))-1 server=server-$(word 3, $(subst ., ,$@))-1 $(word 1, $(subst ., ,$@)).invoke 2>logs/$@.log 1>&2 -f $(mkfile_path)
+	$(MAKE) client=clienthost-$(word 4, $(subst ., ,$@))-1 server=serverhost-$(word 3, $(subst ., ,$@))-1 $(word 1, $(subst ., ,$@)).invoke 2>logs/$@.log 1>&2 -f $(mkfile_path)
+
+$(foreach f, $(l7host),\
+$(foreach s, $(servers),\
+$(foreach c, $(clients), $(f).$(s).$(c).%))): ##  shortpod.host.server.client.server_nums.client_nums
+	$(MAKE) deployhost.perf-nginx.serverhost-$(word 3, $(subst ., ,$@)).$(word 3, $(subst ., ,$@))-server:true.1.$(word 5, $(subst ., ,$@)) \
+		svc.svc.serverhost-$(word 3, $(subst ., ,$@)).server-$(word 3, $(subst ., ,$@)).1.1 \
+		deployhost.perf-fortio.clienthost-$(word 4, $(subst ., ,$@)).$(word 4, $(subst ., ,$@))-client:true.1.$(word 6, $(subst ., ,$@)) -f $(mkfile_path)
+
+	$(MAKE) client=clienthost-$(word 4, $(subst ., ,$@))-1 server=serverhost-$(word 3, $(subst ., ,$@))-1 $(word 1, $(subst ., ,$@)).invoke 2>logs/$@.log 1>&2 -f $(mkfile_path)
+
 
 $(l7container): ## shortpod.container shortsvc.container longpod.container longsvc.container
 	# $(MAKE) $(foreach s, $(servers), $(foreach c, $(clients), $@.$(s).$(c))) -f $(mkfile_path)
@@ -153,10 +172,10 @@ $(l7host): ## shortpod.host shortsvc.host longpod.host longsvc.host
 	# $(MAKE) $(foreach s, $(servers), $(foreach c, $(clients), $@.$(s).$(c))) -f $(mkfile_path)
 	$(foreach s, $(servers), $(foreach c, $(clients), $(MAKE) clean $@.$(s).$(c) -f $(mkfile_path)))
 
-l7test: clean ## make all l7 test
+l7test: clean ## make all pod(c)->http->pod(c) test
 	$(foreach f, $(l7container), $(MAKE) $(f) -f $(mkfile_path); sleep 120;)
 
-l7hosttest: clean ## make all l7 test
+l7hosttest: clean ## make all pod(h)->http->pod(h) test
 	$(foreach f, $(l7host), $(MAKE) $(f) -f $(mkfile_path); sleep 120;)
 
 $(foreach t, $(outpod),\

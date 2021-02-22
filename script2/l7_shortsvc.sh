@@ -1,6 +1,5 @@
 
-podserver_name=`kubectl get pods --selector app=$server -o jsonpath='{.items[0].metadata.name}'`
-podserver_ip=`kubectl get pods --selector app=$server -o jsonpath='{.items[0].status.podIP}'`
+svc_ip=`kubectl get svc server-perf-1 -o jsonpath='{..clusterIP}'`
 nodesserver_ip=`kubectl get pods -l app=$server -ojsonpath="{range .items[*]}{..hostIP}{' '}{end}"|tr ' ' '\n'|sort|uniq`
 
 podsclient_name=`kubectl get pods -l app=$client -ojsonpath="{range .items[*]}{..metadata.name}{' '}{end}"|tr ' ' '\n'|sort|uniq`
@@ -19,7 +18,7 @@ done
 currentTimeStamp=`date +%s.%2N`
 for podclient_name in $podsclient_name; do
 {
-kubectl exec $podclient_name -- /usr/bin/fortio load -qps $qps -c $connect -t 120s --keepalive=false http://$server > $podclient_name.log 2>&1
+kubectl exec $podclient_name -- /usr/bin/fortio load -qps $qps -c $connect -t 120s --keepalive=false http://$svc_ip > $podclient_name.log 2>&1
 } &
 done
 wait
