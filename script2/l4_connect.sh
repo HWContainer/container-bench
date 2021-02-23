@@ -6,6 +6,7 @@ nodeserver_ip=`kubectl get pods --selector app=$server -o jsonpath='{.items[0].s
 podsclient_name=`kubectl get pods -l app=$client -ojsonpath="{range .items[*]}{..metadata.name}{' '}{end}"|tr ' ' '\n'|sort|uniq`
 nodesclient_ip=`kubectl get pods -l app=$client -ojsonpath="{range .items[*]}{..hostIP}{' '}{end}"|tr ' ' '\n'|sort|uniq`
 
+if [[ -z "${FAST}" ]]; then
 sleep 60
 currentTimeStamp=`date +%s.%2N`
 sleep 60
@@ -13,30 +14,33 @@ python query_csv.py $prometheus_url $currentTimeStamp $nodeserver_ip
 for nodeclient_ip in $nodesclient_ip; do
 python query_csv.py $prometheus_url $currentTimeStamp $nodeclient_ip
 done
+fi
 
 currentTimeStamp=`date +%s.%2N`
-kubectl exec $podserver_name -- sh -c 'cd /home/paas; sed -i "s/40032/40128/g" con_netserver.sh; bash ./con_netserver.sh 1>/log.netserver 2>&1'
-
+count=256
+kubectl exec $podserver_name -- bash -c 'rm -f log.*; for ((i=40000; i<'$((count+40000))';i++)); do { /home/paas/netserver -p $i >/log.$i 2>&1; }& done'
+sleep 10
 i=0
 for podclient_name in $podsclient_name; do
-port_range="$((40000+$((i*64)))) $((39999+$(($((i+1))*64))))"
-{ 
-kubectl exec $podclient_name -- sh -c 'cd /home/paas; rm -f tcp_crr.log; sed -i "s/20/30/g" con_netperf.sh; sed -i "s/40000 40031/'"${port_range}"'/g" con_netperf.sh; bash ./con_netperf.sh '$podserver_ip 1>/log.netperf 2>&1 
-} &
+port_start=$((40000+$((i*128))))
+port_stop=$((40000+$(($((i+1))*128))))
+{
+kubectl exec $podclient_name -- bash -c 'rm -f log.*; for ((i='$port_start'; i<'$port_stop';i++)); do { /home/paas/netperf -t TCP_CRR -H '$podserver_ip' -l 20 -p $i -- -r 64 > /log.$i 2>&1; }& done; wait;'
+}&
 i=$((i+1))
 done
 wait
 
-sleep 60
-
 for podclient_name in $podsclient_name; do
-kubectl exec $podclient_name -- sh -c 'cd /home/paas; sed -i "s/20.00/30.00/g" con_collect.sh; bash ./con_collect.sh'
+kubectl exec $podclient_name -- sh -c 'cat log.*'|grep 20.0|awk '{print $6}'|awk '{sum+=$1}; END {print sum}'
 done
 
+if [[ -z "${FAST}" ]]; then
 python query_csv.py $prometheus_url $currentTimeStamp $nodeserver_ip
 for nodeclient_ip in $nodesclient_ip; do
 python query_csv.py $prometheus_url $currentTimeStamp $nodeclient_ip
 done
+fi
 
 for podclient_name in $podsclient_name; do
 kubectl exec $podclient_name -- pkill netperf

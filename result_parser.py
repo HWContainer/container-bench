@@ -102,7 +102,7 @@ def parser_fortio_logs(file):
                 print(i.strip())
                 quickout=0
                 continue
-            if 'con_collect.sh' in i:
+            if 'con_collect.sh' in i or "print sum" in i:
                 print(i.strip())
                 quickout=1
                 continue
@@ -245,7 +245,7 @@ def parser_fortio_logs(file):
 
     keys = []
     #keys = ["dockerd", "kubelet", "envoy", "pilot-discovery", "pilot-agent", "kube-proxy", "process"]
-    keys = ["nginx", "fortio"]
+    keys = ["nginx", "fortio","iperf", "netserver", "netperf","qperf"]
     if not keys:
         for c in case_list:
             if 'serverfortio mem' in c[1].keys():
@@ -272,7 +272,7 @@ def parser_fortio_logs(file):
 
     keys = []
     #keys = ["nodemem", "envoymem", "pilot-discoverymem", "pilot-agentmem", "dockerdmem", "containerd-shimmem", "kubeletmem", "processmem"]
-    keys = ["nodemem", "nginxmem", "fortiomem"]
+    keys = ["nodemem", "nginxmem", "fortiomem", "iperfmem", "netservermem", "netperfmem", "qperfmem"]
     if not keys:
         for c in case_list:
             if 'serverfortio mem' in c[1].keys():
