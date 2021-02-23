@@ -25,7 +25,8 @@ help: ## This help.
 .DEFAULT_GOAL := help
 
 ingress_secret ?= test
-nodec_ip ?= 10.1.211.207 10.1.202.149 10.1.24.248
+#nodec_ip ?= 10.1.211.207 10.1.202.149 10.1.24.248
+nodec_ip = 10.1.223.178 10.1.168.30 10.1.77.82
 servers ?= 64u-c6ne-euler
 clients ?= 64u-c6ne-euler
 CONNECT ?= 64
@@ -101,19 +102,21 @@ $(foreach c, $(clients), $(f).$(s).$(c)))): ##  throughput.server.client
 	$(MAKE) clean -f $(mkfile_path)
 	$(MAKE) $(word 1, $(subst ., ,$@)).prepare.$(word 2, $(subst ., ,$@))-server $(word 1, $(subst ., ,$@)).prepare.$(word 3, $(subst ., ,$@))-client -f $(mkfile_path)
 	$(MAKE) deployhost.perf-nginx.serverhost-$(word 2, $(subst ., ,$@)).$(word 2, $(subst ., ,$@))-server:true.1.1 \
-		deployhost.perf-nginx.clienthost-$(word 3, $(subst ., ,$@)).$(word 3, $(subst ., ,$@))-client:true.1.$(PODS) -f $(mkfile_path)
-
-	prometheus_url=$${prometheus_url:-http://`kubectl get svc prometheus-server-1 -ojsonpath="{..ip}"`:9090} \
-	client=clienthost-$(word 3, $(subst ., ,$@))-1 server=serverhost-$(word 2, $(subst ., ,$@))-1 \
-	bash -x $(current_dir)script2/l4_$(word 1, $(subst ., ,$@)).sh 2>logs/host-$@.log 1>&2
-
-	$(MAKE) clean -f $(mkfile_path)
-	$(MAKE) deploy.perf-nginx.server-$(word 2, $(subst ., ,$@)).$(word 2, $(subst ., ,$@))-server:true.1.1 \
+		deployhost.perf-nginx.clienthost-$(word 3, $(subst ., ,$@)).$(word 3, $(subst ., ,$@))-client:true.1.$(PODS) \
+		deploy.perf-nginx.server-$(word 2, $(subst ., ,$@)).$(word 2, $(subst ., ,$@))-server:true.1.1 \
 		deploy.perf-nginx.client-$(word 3, $(subst ., ,$@)).$(word 3, $(subst ., ,$@))-client:true.1.$(PODS) -f $(mkfile_path)
 
 	prometheus_url=$${prometheus_url:-http://`kubectl get svc prometheus-server-1 -ojsonpath="{..ip}"`:9090} \
+	client=clienthost-$(word 3, $(subst ., ,$@))-1 server=serverhost-$(word 2, $(subst ., ,$@))-1 \
+	bash -x $(current_dir)script2/l4_$(word 1, $(subst ., ,$@)).sh 2>logs/host-host-$@.log 1>&2
+
+	prometheus_url=$${prometheus_url:-http://`kubectl get svc prometheus-server-1 -ojsonpath="{..ip}"`:9090} \
+	client=clienthost-$(word 3, $(subst ., ,$@))-1 server=server-$(word 2, $(subst ., ,$@))-1 \
+	bash -x $(current_dir)script2/l4_$(word 1, $(subst ., ,$@)).sh 2>logs/host-container-$@.log 1>&2
+
+	prometheus_url=$${prometheus_url:-http://`kubectl get svc prometheus-server-1 -ojsonpath="{..ip}"`:9090} \
 	client=client-$(word 3, $(subst ., ,$@))-1 server=server-$(word 2, $(subst ., ,$@))-1 \
-	bash -x $(current_dir)script2/l4_$(word 1, $(subst ., ,$@)).sh 2>logs/$@.log 1>&2
+	bash -x $(current_dir)script2/l4_$(word 1, $(subst ., ,$@)).sh 2>logs/container-contaienr-$@.log 1>&2
 
 
 $(l4): ## throughput pps connect pv
