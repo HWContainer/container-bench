@@ -61,7 +61,9 @@ k8s_obj = svc ds deploy pod pvc pv ingress
 
 
 clean: ## clean created_by=perf-test
+	echo "begin clean:        `date +%Y-%m-%d' '%H:%M:%S.%N`"
 	$(MAKE) $(foreach n, $(k8s_obj), clean.$(n)) -f $(mkfile_path)
+	echo "finishclean:        `date +%Y-%m-%d' '%H:%M:%S.%N`"
 
 clean.%: ## clean obj
 	kubectl get $(lastword $(subst ., ,$@)) -n $(namespace) -l created_by=perf-test -o=jsonpath='{.items[*].metadata.name}' \
