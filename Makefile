@@ -24,22 +24,22 @@ image: ## build image
 	docker rmi $(swr)/$(fortioimage)
 
 base_image: ## build image
-	docker build -f $(current_dir)/dockerfiles/Dockerfile.fortio -t $(swr)/$(fortioimage) $(current_dir)/script
+	cd $(current_dir)/script; docker build -t $(swr)/$(fortioimage) - < $(current_dir)/dockerfiles/Dockerfile.fortio
 	docker push $(swr)/$(fortioimage)
 	docker rmi $(swr)/$(fortioimage)
-	docker build -f $(current_dir)/dockerfiles/Dockerfile.perf-nginx -t $(swr)/$(baseimage) $(current_dir)/script
-	docker push $(swr)/$(baseimage)
-	docker rmi $(swr)/$(baseimage)
-	docker build -f $(current_dir)/dockerfiles/Dockerfile.prometheus -t $(swr)/$(prometheusimage) $(current_dir)/script
+	#cd $(current_dir)/script; docker build -t $(swr)/$(baseimage) - < $(current_dir)/dockerfiles/Dockerfile.perf-nginx
+	#docker push $(swr)/$(baseimage)
+	#docker rmi $(swr)/$(baseimage)
+	cd $(current_dir)/script; docker build -t $(swr)/$(prometheusimage) - < $(current_dir)/dockerfiles/Dockerfile.prometheus
 	docker push $(swr)/$(prometheusimage)
 	docker rmi $(swr)/$(prometheusimage)
-	docker build -f $(current_dir)/dockerfiles/Dockerfile.grafana -t $(swr)/$(grafanaimage) $(current_dir)/script
+	cd $(current_dir)/script; docker build -t $(swr)/$(grafanaimage) -< $(current_dir)/dockerfiles/Dockerfile.grafana
 	docker push $(swr)/$(grafanaimage)
 	docker rmi $(swr)/$(grafanaimage)
-	docker build -f $(current_dir)/dockerfiles/Dockerfile.process -t $(swr)/$(processimage) $(current_dir)/script
+	cd $(current_dir)/script; docker build -t $(swr)/$(processimage)  -< $(current_dir)/dockerfiles/Dockerfile.process 
 	docker push $(swr)/$(processimage)
 	docker rmi $(swr)/$(processimage)
-	docker build -f $(current_dir)/dockerfiles/Dockerfile.node -t $(swr)/$(nodeimage) $(current_dir)/script
+	cd $(current_dir)/script; docker build -t $(swr)/$(nodeimage) -<  $(current_dir)/dockerfiles/Dockerfile.node
 	docker push $(swr)/$(nodeimage)
 	docker rmi $(swr)/$(nodeimage)
 
