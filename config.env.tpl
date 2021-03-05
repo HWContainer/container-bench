@@ -3,6 +3,7 @@ baseimage=perf-nginx:v10.1
 image=perf-nginx:v10-test
 perf-nginx=perf-nginx:v10.1
 perf-density=perf-nginx:v10.1
+perf-densityi-evs=perf-nginx:v10.1
 perf-fortio=fortio
 serverimage=perf-nginx:v10.1
 fortioimage=fortio
