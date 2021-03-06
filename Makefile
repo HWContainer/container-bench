@@ -42,6 +42,15 @@ base_image: ## build image
 	cd $(current_dir)/script; docker build -t $(swr)/$(nodeimage) -<  $(current_dir)/dockerfiles/Dockerfile.node
 	docker push $(swr)/$(nodeimage)
 	docker rmi $(swr)/$(nodeimage)
+	cd $(current_dir)/script; docker build -t $(swr)/$(sysbench) -<  $(current_dir)/dockerfiles/Dockerfile.sysbench
+	docker push $(swr)/$(sysbench)
+	docker rmi $(swr)/$(sysbench)
+	cd $(current_dir)/script; docker build -t $(swr)/$(memtier) -<  $(current_dir)/dockerfiles/Dockerfile.memtier
+	docker push $(swr)/$(memtier)
+	docker rmi $(swr)/$(memtier)
+	cd $(current_dir)/script; docker build -t $(swr)/busybox -<  $(current_dir)/dockerfiles/Dockerfile.busybox
+	docker push $(swr)/busybox
+	docker rmi $(swr)/busybox
 
 moreimage: ## build image special l layer and c size
 	dd if=/dev/urandom of=sample bs=1M count=$(c)

@@ -1,5 +1,5 @@
-FROM swr.cn-east-3.myhuaweicloud.com/paas_perf/sysbench:1.0.20
-#FROM swr.cn-east-3.myhuaweicloud.com/paas_perf/centos:8.3.2011
+FROM swr.cn-east-3.myhuaweicloud.com/paas_perf/sysbench:1.0.17-centos7
+#FROM centos:7
 #RUN curl -s https://packagecloud.io/install/repositories/akopytov/sysbench/script.rpm.sh | bash
 #RUN yum -y install sysbench
 
