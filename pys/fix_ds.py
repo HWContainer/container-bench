@@ -14,7 +14,7 @@ fixing = {"metadata.labels.created_by":"perf-test"}
 if utils.from_json_or("spec.template.metadata", j, {}):
     fixing = {"metadata.labels.created_by": "perf-test", "spec.template.metadata.labels.created_by": "perf-test"}
 
-if inpt.select:
+if inpt.select and ":" in inpt.select:
     select = {k:v for k, v in [kv.split(":") for kv in inpt.select.split(",")]}
     fixing.update({"spec.template.spec.nodeSelector": select})
 j = utils.auto_fix(j, fixing)
