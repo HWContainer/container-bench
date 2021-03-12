@@ -107,7 +107,7 @@ function getCostEach(){
 }
 
 function getPingServer(){
-    PINGSERVER=`kubectl -n ${NAMESPACE} get pods perf-server-1 -o=jsonpath='{.status.podIP}'`
+    PINGSERVER=${PINGSERVER:-`kubectl -n ${NAMESPACE} get pods perf-server-1 -o=jsonpath='{.status.podIP}'`}
 }
 
 SCRIPT=$(basename $0)
