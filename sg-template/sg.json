@@ -1,0 +1,23 @@
+{
+  "apiVersion": "crd.yangtse.cni/v1",
+  "kind": "SecurityGroup",
+  "metadata": {
+    "name": "${name}",
+    "namespace": "${namespace}"
+  },
+  "spec": {
+    "podSelector": {
+      "matchLabels": {
+        "app": "${name}"
+      }
+    },
+    "securityGroups": [
+      {
+        "id": "${security_group_id}"
+      },
+      {
+        "id": "${default_security_group_id}"
+      }
+    ]
+  }
+}

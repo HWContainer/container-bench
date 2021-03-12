@@ -14,6 +14,9 @@ function checkPodsRunning(){
     pre_running=0
     pre_completed=0
     pre_target=0
+    pre_readys=0
+    pre_binds=0
+    pre_attaches=0
     target=0
     pre_eni=0
     pre_subeni=0
@@ -35,6 +38,10 @@ function checkPodsRunning(){
         eni=`echo "$alleni" | grep -v master-eni| wc -l`
         subeni=`echo "$alleni" | grep master-eni| wc -l`
 
+        allsg=`kubectl get pni -ojsonpath='{range .items[?(.spec.securityGroup.securityGroupNames)]}{.metadata.name}{"\t"}{.spec.securityGroup.securityGroupNames}{"\t"}{.spec.securityGroup.defaultSecurityGroupIDs}{"\t"}{.status.securityGroupIDs}{"\n"}' -nkube-system`
+        binds=`echo "$allsg" |grep $BASE_NAME |wc -l`
+        attaches=`echo "$allsg" |grep $BASE_NAME |grep ','|wc -l`
+
         ret=`kubectl get pod ${NAMESPACE} | grep ${BASE_NAME}| grep -v "NAME"`
         
         finishedPods=`echo "$ret" |grep ${BASE_NAME} | wc -l`
@@ -45,17 +52,23 @@ function checkPodsRunning(){
 
         finishedPods=`echo "$ret" | grep ${BASE_NAME}| grep -e "Running"| wc -l`
         running=$finishedPods
+
+        readyPods=`echo "$ret" | grep ${BASE_NAME}| grep -e "1/1"| wc -l`
+        readys=$readyPods
         
         finishedPods=`echo "$ret" | grep ${BASE_NAME}| grep -e "Running" -e "Completed"| wc -l`
         completed=$finishedPods
 
 
-        if [[ ${nodes} -ne ${pre_nodes} ]] || [[ ${ready} -ne ${pre_ready} ]] || [[ ${taint} -ne ${pre_taint} ]] || [[ ${running} -ne ${pre_running} ]] || [[ ${scheduled} -ne ${pre_scheduled} ]] || [[ ${created} -ne ${pre_created} ]] || [[ ${target} -ne ${pre_target} ]] || [[ ${completed} -ne ${pre_completed} ]] || [[ ${eni} -ne ${pre_eni} ]] || [[ ${subeni} -ne ${pre_subeni} ]]; then
-            echo "at `date +%Y-%m-%d' '%H:%M:%S.%N`: $nodes $ready $taint $eni $subeni $created $scheduled $running $completed"
+        if [[ ${nodes} -ne ${pre_nodes} ]] || [[ ${ready} -ne ${pre_ready} ]] || [[ ${taint} -ne ${pre_taint} ]] || [[ ${running} -ne ${pre_running} ]] || [[ ${readys} -ne ${pre_readys} ]] || [[ ${pre_attaches} -ne ${attaches} ]] || [[ ${scheduled} -ne ${pre_scheduled} ]] || [[ ${created} -ne ${pre_created} ]] || [[ ${target} -ne ${pre_target} ]] || [[ ${completed} -ne ${pre_completed} ]] || [[ ${eni} -ne ${pre_eni} ]] || [[ ${subeni} -ne ${pre_subeni} ]]; then
+            echo "at `date +%Y-%m-%d' '%H:%M:%S.%N`: $nodes $ready $taint $eni, $subeni $binds $attaches, $created $scheduled $running $readys $completed"
             pre_nodes=$nodes
             pre_ready=$ready
             pre_taint=$taint
             pre_running=$running
+            pre_readys=$readys
+            pre_binds=$binds
+            pre_attaches=$attaches
             pre_scheduled=$scheduled
             pre_created=$created
             pre_completed=$completed
@@ -119,7 +132,7 @@ date +%Y-%m-%d' '%H:%M:%S > begin
 echo "Test start:              `date +%Y-%m-%d' '%H:%M:%S.%N`"
 echo "namespace: $NAMESPACE"
 echo "      app: $BASE_NAME"
-echo "at <date>: nodes ready readytaint eni subeni created sechuded running completed"
+echo "at <date>: nodes ready readytaint eni, subeni bind attach, created sechuded running readys completed"
 echo "---------------------------------------------"
 checkPodsRunning
 echo "Test finished:           `date +%Y-%m-%d' '%H:%M:%S.%N`"
