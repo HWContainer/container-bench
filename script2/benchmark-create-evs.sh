@@ -7,11 +7,13 @@ NAMESPACE=sina-test
 STORAGE=10Gi
 TEMPLATE_FILE=pod.json
 PIPE_COUNT=20
+PASSWORD=`date +%s | sha256sum | base64 | head -c 32 ; echo`
+echo PASSWORD=$PASSWORD
 
 function createPvc(){
    id=$1
-   kubectl apply -f pvcpvc$id/ --recursive
-   rm -rf pvcpvc${id}
+   kubectl apply -f pvc-$PASSWORD$id/ --recursive
+   rm -rf pvc-$PASSWORD${id}
 }
 
 function gen_pod(){
@@ -20,8 +22,8 @@ function gen_pod(){
     podName="${BASE_NAME}-${p_id}"
     f_pod=${pod//EVS_PVC_NAME/${podName}}
     f_pod=${f_pod//AZ/${az}}
-    mkdir -p pvcpvc$f_id
-    echo $f_pod > pvcpvc$f_id/${p_id}.json
+    mkdir -p pvc-$PASSWORD$f_id
+    echo $f_pod > pvc-$PASSWORD$f_id/${p_id}.json
 }
 
 function genPods(){

@@ -8,11 +8,13 @@ SECRET_NAME=x
 NAMESPACE=sina-test
 TEMPLATE_FILE=pod.json
 PIPE_COUNT=20
+PASSWORD=`date +%s | sha256sum | base64 | head -c 32 ; echo`
+echo PASSWORD=$PASSWORD
 
 function createDeploy(){
     id=$1
-    kubectl apply -f ingressingress$id/ --recursive
-    rm -rf ingressingress${id}
+    kubectl apply -f ingress-$PASSWORD$id/ --recursive
+    rm -rf ingress-$PASSWORD${id}
 }
 function gen_svc(){
     p_id=$1
@@ -25,8 +27,8 @@ function gen_svc(){
     svcName="${SVC_NAME}-${d_idx}"
     f_pod=${pod//SVC_NAME/${svcName}}
     f_pod=${f_pod//INGRESS_NAME/${ingressName}}
-    mkdir -p ingressingress$f_id
-    echo $f_pod > ingressingress$f_id/${p_id}.json
+    mkdir -p ingress-$PASSWORD$f_id
+    echo $f_pod > ingress-$PASSWORD$f_id/${p_id}.json
 }
 
 function createSvcs(){

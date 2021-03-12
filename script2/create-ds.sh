@@ -7,11 +7,13 @@ NAMESPACE=sina-test
 TEMPLATE_FILE=pod.json
 SELECT=""
 PIPE_COUNT=20
+PASSWORD=`date +%s | sha256sum | base64 | head -c 32 ; echo`
+echo PASSWORD=$PASSWORD
 
 function createDeploy(){
     id=$1
-    kubectl apply -f dsds$id/ --recursive
-    rm -rf dsds${id}
+    kubectl apply -f ds-$PASSWORD$id/ --recursive
+    rm -rf ds-$PASSWORD${id}
 }
 function gen_pod(){
     p_id=$1
@@ -19,8 +21,8 @@ function gen_pod(){
     podName="${BASE_NAME}-${p_id}"
     f_pod=${pod//POD_NAME/${podName}}
     f_pod=${f_pod//EVS_PVC_NAME/${podName}}
-    mkdir -p dsds$f_id
-    echo $f_pod > dsds$f_id/${p_id}.json
+    mkdir -p ds-$PASSWORD$f_id
+    echo $f_pod > ds-$PASSWORD$f_id/${p_id}.json
 }
 
 function genPods(){

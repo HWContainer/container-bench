@@ -7,11 +7,13 @@ APP_NAME=x
 NAMESPACE=sina-test
 TEMPLATE_FILE=pod.json
 PIPE_COUNT=20
+PASSWORD=`date +%s | sha256sum | base64 | head -c 32 ; echo`
+echo PASSWORD=$PASSWORD
 
 function createDeploy(){
     id=$1
-    kubectl apply -f svcsvc$id/ --recursive
-    rm -rf svcsvc${id}
+    kubectl apply -f svc-$PASSWORD$id/ --recursive
+    rm -rf svc-$PASSWORD${id}
 }
 function gen_svc(){
     p_id=$1
@@ -24,8 +26,8 @@ function gen_svc(){
     deployName="${APP_NAME}-${d_idx}"
     f_pod=${pod//POD_NAME/${deployName}}
     f_pod=${f_pod//SVC_NAME/${svcName}}
-    mkdir -p svcsvc$f_id
-    echo $f_pod > svcsvc$f_id/${p_id}.json
+    mkdir -p svc-$PASSWORD$f_id
+    echo $f_pod > svc-$PASSWORD$f_id/${p_id}.json
 }
 
 function createSvcs(){
