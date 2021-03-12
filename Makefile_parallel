@@ -1,0 +1,17 @@
+mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
+current_dir := $(dir $(mkfile_path))
+
+
+help: ## This help.
+	echo $(dir $(mkfile_path))
+        @awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_0-9-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+clients = container-bench container-bench3
+
+.PHONY: $(clients)
+
+run:
+	$(MAKE) $(clients) -j $(count clients) 
+
+$(clients):
+	cd $@; bash run.sh |tee result.log

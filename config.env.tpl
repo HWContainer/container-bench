@@ -38,3 +38,6 @@ servers=
 clients=
 ingress_secret=
 az=
+
+sgs_ids=sgs_ids
+PINGSERVER=

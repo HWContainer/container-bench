@@ -9,7 +9,7 @@ SG_LIST=
 DEFAULT_SG=
 SELECT=""
 PIPE_COUNT=20
-PASSWORD=`date +%s | sha256sum | base64 | head -c 32 ; echo`
+PASSWORD=`head /dev/urandom |cksum |md5sum |cut -c 1-30`
 echo PASSWORD=$PASSWORD
 
 function create_sg(){
