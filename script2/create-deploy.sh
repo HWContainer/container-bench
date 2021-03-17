@@ -18,7 +18,7 @@ function createDeploy(){
 function gen_pod(){
     p_id=$1
     f_id=$2
-    podName="${BASE_NAME}-${p_id}"
+    podName="${BASE_NAME-}${p_id}"
     f_pod=${pod//POD_NAME/${podName}}
     f_pod=${f_pod//EVS_PVC_NAME/${podName}}
     mkdir -p deploy-$PASSWORD$f_id
@@ -131,7 +131,7 @@ while test $# -gt 0; do
             exit 0
             ;;
         --name)
-            BASE_NAME=${2}
+            BASE_NAME=${2}-
             shift 2
             ;;
         --namespace)

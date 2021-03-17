@@ -6,12 +6,22 @@ help: ## This help.
 	echo $(dir $(mkfile_path))
         @awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_0-9-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-clients = container-bench container-bench3
+clients = container-bench
 
 .PHONY: $(clients)
 
-run:
-	$(MAKE) $(clients) -j $(count clients) 
+run_deploy run_sg:
+	$(MAKE) $(clients) TARGET=$@ -j $(count clients) 
 
 $(clients):
-	cd $@; bash run.sh |tee result.log
+	cd $@; bash $(TARGET).sh |tee result.log
+
+prepare:	
+	for i in $$(seq 1 2); do \
+		cp -r container-bench container-bench.$$i; \
+		sed -n $${i}p sgs_ids > container-bench.$$i/sgs_ids; \
+		sed -n $${i}p ports_ids|awk -F ',' '{print $$1}'|xargs -i sed -i 's/PINGSERVER=.*/PINGSERVER={}/g' container-bench.$$i/config.env; \
+		sed -i 's/perf-rds-1/perf-rds-'$$i'/g' container-bench.$$i/run_deploy.sh; \
+		sed -i 's/perf-rds-1/perf-rds-'$$i'/g' container-bench.$$i/run_sg.sh; \
+	done
+

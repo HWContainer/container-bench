@@ -75,7 +75,7 @@ function checkPodsRunning(){
         fi
         first=${outarray[0]}
         final=${finalarray[0]}
-        ret=`kubectl -n ${NAMESPACE} get sg | grep ${BASE_NAME}| grep -v "NAME"`
+        ret=`kubectl -n ${NAMESPACE} get sg | grep ${BASE_NAME}- | grep -v "NAME"`
         
         finishedPods=`echo "$ret" |grep ${BASE_NAME} | wc -l`
         if [[ ${finishedPods} -eq ${TOTAL_POD_NUM} ]]; then
