@@ -26,7 +26,7 @@ help: ## This help.
 
 ingress_secret ?= test
 #nodec_ip ?= 10.1.211.207 10.1.202.149 10.1.24.248
-nodec_ip = 10.1.29.95 10.1.30.207 10.1.160.76 10.1.202.106
+nodec_ip = 10.1.228.206
 servers ?= 64u-c6ne-euler
 clients ?= 64u-c6ne-euler
 CONNECT ?= 64
@@ -271,8 +271,8 @@ $(foreach t, $(outpod_host) $(outsvc_host) $(outingress_host), $(t)): ## make l7
 outtest_host: clean ## test for outsize cluster
 	$(MAKE) $(foreach t, $(outpod_host) $(outsvc_host) $(outingress_host), $(t)) -f $(mkfile_path)
 
-watch: ## monit pods to record scaling
-	bash $(current_dir)/script2/benchmark-monit-pods2.sh --namespace A --name perf-rds | tee logs/$@.`date +%Y-%m-%d_%H:%M:%S`
+watch.%: ## monit pods to record scaling
+	bash $(current_dir)/script2/benchmark-monit-pods2.sh --namespace A --name $(word 2, $(subst ., ,$@)) | tee logs/$@.`date +%Y-%m-%d_%H:%M:%S`
 
 prepare_client: ## prepare fortio client
 	$(MAKE) $(foreach nodec, $(nodec_ip), $(nodec)) -f $(mkfile_path)
