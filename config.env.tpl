@@ -14,6 +14,7 @@ grafanaimage=grafana:7.1.4
 prometheusimage=prometheus
 sysbench=sysbench:1.0.17-centos7
 memtier=memtier:1.3.0-centos7
+dnsperf=dnsperf:2.4.2-centos7
 
 namespace=default
 endpoint=https://cci.cn-north-4.myhuaweicloud.com

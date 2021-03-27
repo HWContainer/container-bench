@@ -1,0 +1,6 @@
+FROM swr.cn-east-3.myhuaweicloud.com/paas_perf/dnsperf:2.4.2-centos7.9
+
+#
+#FROM swr.cn-east-3.myhuaweicloud.com/paas_perf/sysbench:1.0.17-centos7
+#ADD dnsperf-2.4.2.tar.gz ./
+#RUN yum install -y file; cd dnsperf-2.4.2; ./configure; make; make install
