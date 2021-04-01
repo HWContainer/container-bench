@@ -67,7 +67,13 @@ server: ## create a server for ping
 metrics: ## create a grafana and process-exporter
 	make monit; make process; make node
 
-monit:
+cert:
+	python pys/get_certs.py
+	mkdir -p cert
+	mv client.key client.crt cert
+	kubectl create cm cert --from-file=cert
+
+monit: cert
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --pod-num 1 --name grafana-server --namespace $(namespace) --pod-template $(current_dir)/deploy-template/grafana-server.json --image $(swr)/$(grafanaimage)
 	bash $(current_dir)/script/benchmark-create-svc.sh --deploy-num 1 --pod-num 1 --name grafana-server --namespace $(namespace) --pod-template $(current_dir)/svc-template/grafana_svc.json 
 	bash $(current_dir)/script/benchmark-create-deploy-pvc.sh --pod-num 1 --name prometheus-server --namespace $(namespace) --pod-template $(current_dir)/deploy-template/promethus-server.json --image $(swr)/$(prometheusimage)
