@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 DEPLOY_NUM=1
 POD_NUM=1
@@ -50,7 +50,7 @@ function createPods(){
 function checkPodsRunning(){
     finishedPods=0
     outarray=(1 2 4 8 16 32 64 128 256 512 1024 2048)
-    finalarray=(8 4 2 1 0)
+    finalarray=(8 4 2 1 0 -1)
     final=${finalarray[0]}
     while [[ $final -ge $TOTAL_POD_NUM ]]; do
         finalarray=(${finalarray[@]:1})
