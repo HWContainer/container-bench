@@ -1,13 +1,16 @@
-az3_sc=app=server-az3-lat-1
+az3_sc=server-az3-lat-1
 az3_sh=serverhost-az3-lat-1
 az7_sc=server-az7-lat-1
 az7_sh=serverhost-az7-lat-1
 
-az3_ch=serverhost-az3-lat-1
+az3_ch=clienthost-az3-lat-1
 az3_cc=client-az3-lat-1
+az3_ch_local=clienthost-az3-local-1
+az3_cc_local=client-az3-local-1
 az7_ch=clienthost-az7-lat-1
 az7_cc=client-az7-lat-1
-az7_cc2=client-az7-lat2-1
+az7_ch_local=clienthost-az7-local-1
+az7_cc_local=client-az7-local-1
 
 function kill_servers(){
     server=$1
@@ -96,23 +99,35 @@ function check(){
    echo "end   $from $to:        `date +%Y-%m-%d' '%H:%M:%S.%N`"
 }
 
-#check $az3_ch $az3_sc
-#check $az3_ch $az7_sc
+check $az3_ch $az3_sc
+check $az3_ch $az7_sc
+check $az3_ch_local $az3_sc
 
-#check $az3_cc $az3_sc
-#check $az3_cc $az7_sc
+check $az3_cc $az3_sc
+check $az3_cc $az7_sc
+check $az3_cc_local $az3_sc
 
-#check $az3_cc $az3_sh
-#check $az3_cc $az7_sh
+check $az3_cc $az3_sh
+check $az3_cc $az7_sh
+check $az3_cc_local $az3_sh
+
+check $az3_ch $az3_sh
+check $az3_ch $az7_sh
+check $az3_ch_local $az3_sh
 
 check $az7_ch $az7_sc
-#check $az7_ch $az3_sc
-check $az7_sh $az7_sc
+check $az7_ch $az3_sc
+check $az7_ch_local $az7_sc
 
 check $az7_cc $az7_sc
-#check $az7_cc $az3_sc
-check $az7_cc2 $az7_sc
+check $az7_cc $az3_sc
+check $az7_cc_local $az7_sc
 
 check $az7_cc $az7_sh
-#check $az7_cc $az3_sh
-check $az7_cc2 $az7_sh
+check $az7_cc $az3_sh
+check $az7_cc_local $az7_sh
+
+check $az7_ch $az7_sh
+check $az7_ch $az3_sh
+check $az7_ch_local $az7_sh
+
