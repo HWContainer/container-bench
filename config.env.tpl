@@ -2,6 +2,7 @@ swr=swr.cn-east-3.myhuaweicloud.com/paas_perf
 baseimage=perf-nginx:v10.1
 image=perf-nginx:v10-test
 perf-nginx=perf-nginx:v10.1
+perf-l4=perf-nginx:v10.1
 perf-density=perf-nginx:v10.1
 perf-density-evs=perf-nginx:v10.1
 perf-affinity=perf-nginx:v10.1
