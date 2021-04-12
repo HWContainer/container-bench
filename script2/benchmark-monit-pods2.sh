@@ -29,16 +29,16 @@ function checkPodsRunning(){
             echo "at `date +%Y-%m-%d' '%H:%M:%S.%N`: receive presure stop"
             rm -f stop
         fi
-        allnode=`kubectl get nodes -ojsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.conditions[?(@.type=="Ready")].status}{"\t"}{..taints}{"\n"}'`
+        allnode=`kubectl get nodes -ojsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.conditions[?(@.type=="Ready")].status}{"\t"}{..taints}{"\n"}{end}'`
         nodes=`echo "$allnode" | grep -v "NAME" | wc -l`
         ready=`echo "$allnode" | grep -v "NAME" |grep -w True| wc -l`
         taint=`echo "$allnode" | grep -v "NAME" |grep -w True| grep -v map| wc -l`
         #target=`kubectl get hpa ${NAMESPACE} |grep ${BASE_NAME}|grep -oP '\d+%/'|grep -oP '\d+'` 
-        alleni=`kubectl get pni -ojsonpath='{range .items[*]}{.metadata.name}{"\t"}{..labels}{"\t"}{"\n"}' -nkube-system`
+        alleni=`kubectl get pni -ojsonpath='{range .items[*]}{.metadata.name}{"\t"}{..labels}{"\t"}{"\n"}{end}' -nkube-system`
         eni=`echo "$alleni" | grep -v master-eni| wc -l`
         subeni=`echo "$alleni" | grep master-eni| wc -l`
 
-        allsg=`kubectl get pni -ojsonpath='{range .items[?(.spec.securityGroup.securityGroupNames)]}{.metadata.name}{"\t"}{.spec.securityGroup.securityGroupNames}{"\t"}{.spec.securityGroup.defaultSecurityGroupIDs}{"\t"}{.status.securityGroupIDs}{"\n"}' -nkube-system`
+        allsg=`kubectl get pni -ojsonpath='{range .items[?(.spec.securityGroup.securityGroupNames)]}{.metadata.name}{"\t"}{.spec.securityGroup.securityGroupNames}{"\t"}{.spec.securityGroup.defaultSecurityGroupIDs}{"\t"}{.status.securityGroupIDs}{"\n"}{end}' -nkube-system`
         binds=`echo "$allsg" |grep $BASE_NAME |wc -l`
         attaches=`echo "$allsg" |grep $BASE_NAME |grep ','|wc -l`
 

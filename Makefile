@@ -27,9 +27,9 @@ base_image: ## build image
 	cd $(current_dir)/script; docker build -t $(swr)/$(fortioimage) - < $(current_dir)/dockerfiles/Dockerfile.fortio
 	docker push $(swr)/$(fortioimage)
 	docker rmi $(swr)/$(fortioimage)
-	#cd $(current_dir)/script; docker build -t $(swr)/$(baseimage) - < $(current_dir)/dockerfiles/Dockerfile.perf-nginx
-	#docker push $(swr)/$(baseimage)
-	#docker rmi $(swr)/$(baseimage)
+	cd $(current_dir)/script; docker build -t $(swr)/$(baseimage) - < $(current_dir)/dockerfiles/Dockerfile.perf-nginx
+	docker push $(swr)/$(baseimage)
+	docker rmi $(swr)/$(baseimage)
 	cd $(current_dir)/script; docker build -t $(swr)/$(prometheusimage) - < $(current_dir)/dockerfiles/Dockerfile.prometheus
 	docker push $(swr)/$(prometheusimage)
 	docker rmi $(swr)/$(prometheusimage)
