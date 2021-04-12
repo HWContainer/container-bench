@@ -18,6 +18,8 @@ fixing.update({"spec.replicas":inpt.instance})
 if inpt.select and ":" in inpt.select:
     select = {k:v for k, v in [kv.split(":") for kv in inpt.select.split(",")]}
     fixing.update({"spec.template.spec.nodeSelector": select})
+    fixing.update({"metadata.labels."+k: v for k, v in select})
+    fixing.update({"spec.template.metadata.labels."+k: v for k, v in select})
 j = utils.auto_fix(j, fixing)
 print(json.dumps(j))
 

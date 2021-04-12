@@ -85,8 +85,11 @@ ds.%: ## create ds.<template>.<basename>.os:euler,role:client
 pvc.%: ## create pvc.<template>.<basename>.<count>.<size>->template:evs,nfs,obs,oss
 	bash $(current_dir)script2/benchmark-create-evs.sh --namespace $(namespace) --template $(current_dir)pvc-template/$(word 2, $(subst ., ,$@)).json --name $(word 3, $(subst ., ,$@))  --pvc-num $(word 4, $(subst ., ,$@)) --pvc-size $(word 5, $(subst ., ,$@)) |tee logs/$@.txt
 
+ytse_sg_1.%: ## create ytse_sg_1.<template>.<basename>.<sg_count>
+	bash $(current_dir)script2/create-ytse-sg.sh --namespace $(namespace) --template $(current_dir)sg-template/$(word 2, $(subst ., ,$@)).json --name $(word 3, $(subst ., ,$@)) --sg-num $(word 4, $(subst ., ,$@)) --sg-list $(sgs_ids) |tee logs/$@.txt
+
 ytse_sg.%: ## create ytse_sg.<basename>.<sg_count>
-	bash $(current_dir)script2/create-ytse-sg.sh --namespace $(namespace) --template $(current_dir)sg-template/sg.json --name $(word 2, $(subst ., ,$@)) --sg-num $(word 3, $(subst ., ,$@)) --sg-list $(sgs_ids) |tee logs/$@.txt
+	$(MAKE) $$(echo $@ |sed 's/ytse_sg/ytse_sg_1.sg/g') -f $(mkfile_path)
 
 deploy.%: ## create deploy.<template>.<basename>.os:euler,role:client.<deploy>.<replicas>
 	PINGSERVER=$(PINGSERVER) bash $(current_dir)script2/create-deploy.sh --namespace $(namespace) --template $(current_dir)deploy-template/$(word 2, $(subst ., ,$@)).json --image $(swr)/$($(word 2, $(subst ., ,$@))) --name $(word 3, $(subst ., ,$@)) --select $(word 4, $(subst ., ,$@)) --deploy-num $(word 5, $(subst ., ,$@)) --pod-num $(word 6, $(subst ., ,$@)) |tee logs/$@.txt

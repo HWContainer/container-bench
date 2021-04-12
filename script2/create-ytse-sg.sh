@@ -102,6 +102,7 @@ while test $# -gt 0; do
             echo "     --namespace           set namespace to create sg, this namespace should already created. Default: sina-test"
             echo "     --template            the file path of sg template in json format"
             echo "     --sg-list             the file path of vpc sg guid list"
+            echo "     --selector            the key-pair selector nodes"
             echo ""
             exit 0
             ;;
@@ -125,6 +126,10 @@ while test $# -gt 0; do
             SG_LIST=(`cat ${2}`)
             shift 2
             ;;
+        --selector)
+            SELECT=${2}
+            shift 2
+            ;;
         *)
             echo "unknown option: $1 $2"
             exit 1
@@ -133,14 +138,16 @@ while test $# -gt 0; do
 done
 
 num=${#SG_LIST[@]}
-get_default_sg
-if [[ -z $num ]] || [[ -z $DEFAULT_SG ]]; then
-   echo "--sg-list --default-sg is empty"
-   exit 1
-fi
-POD_TEMPLATE=`python pys/fix_svc.py --template ${TEMPLATE_FILE}`
+POD_TEMPLATE=`python pys/fix_sg.py --template ${TEMPLATE_FILE} --select "${SELECT}"`
 sg=${POD_TEMPLATE//\$\{namespace\}/${NAMESPACE}}
-sg=${sg//\$\{default_security_group_id\}/${DEFAULT_SG}}
+if echo ${sg}|grep default_security_group_id >/dev/null; then
+   get_default_sg
+   if [[ -z $num ]] || [[ -z $DEFAULT_SG ]]; then
+      echo "--sg-list --default-sg is empty"
+      exit 1
+   fi
+   sg=${sg//\$\{default_security_group_id\}/${DEFAULT_SG}}
+fi
 genPods
 date +%Y-%m-%d' '%H:%M:%S > begin
 sleep 1
