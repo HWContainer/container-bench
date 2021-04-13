@@ -6,6 +6,7 @@ BASE_NAME=sina-test
 NAMESPACE=sina-test
 TEMPLATE_FILE=pod.json
 SELECT=""
+MEMORY=""
 PIPE_COUNT=20
 PASSWORD=`head /dev/urandom |cksum |md5sum |cut -c 1-30`
 echo PASSWORD=$PASSWORD
@@ -127,6 +128,7 @@ while test $# -gt 0; do
             echo "     --namespace           set namespace to create pod, this namespace should already created. Default: sina-test"
             echo "     --template            the file path of pod template in json format"
             echo "     --select              the node to deploy k1=v1,k2=v2"
+            echo "     --mem                 the memory of container: 128M, 128Mi, 8G, 8Gi, .., 256G, 256Gi"
             echo ""
             exit 0
             ;;
@@ -158,6 +160,10 @@ while test $# -gt 0; do
             SELECT=${2}
             shift 2
             ;;
+        --mem)
+            MEMORY=${2}
+            shift 2
+            ;;
         *)
             echo "unknown option: $1 $2"
             exit 1
@@ -171,6 +177,7 @@ POD_TEMPLATE=`python pys/fix_deploy.py --template ${TEMPLATE_FILE} --select "${S
 pod=${POD_TEMPLATE//NAMESPACE/${NAMESPACE}}
 pod=${pod//PINGSERVER/${PINGSERVER}}
 pod=${pod//POD_IMAGE/${POD_IMAGE}}
+pod=${pod//MEMORY/${MEMORY}}
 genPods
 date +%Y-%m-%d' '%H:%M:%S > begin
 sleep 1

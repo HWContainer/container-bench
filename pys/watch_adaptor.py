@@ -11,10 +11,10 @@ def adapt_static(ori_list):
     new_list = []
     for at, count in ori_list:
         # print(at.strftime("%H:%M:%S"))
-        while (at - start).total_seconds() >= 1:
+        while (at - start).total_seconds() >= 5:
             # print("---", start.strftime("%H:%M:%S"))
             new_list.append([start, copy.deepcopy(last_c)])
-            start = start + dt.timedelta(0, 1)
+            start = start + dt.timedelta(0, 5)
         last_c = count
     return new_list
 
