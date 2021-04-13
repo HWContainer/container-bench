@@ -66,8 +66,10 @@ clean: ## clean created_by=perf-test
 	echo "finishclean:        `date +%Y-%m-%d' '%H:%M:%S.%N`"
 
 clean.%: ## clean obj
+	echo "begin clean:        `date +%Y-%m-%d' '%H:%M:%S.%N`"
 	kubectl get $(lastword $(subst ., ,$@)) -n $(namespace) -l created_by=perf-test -o=jsonpath='{.items[*].metadata.name}' \
 	|tr ' ' '\n'|xargs -i kubectl delete $(lastword $(subst ., ,$@)) -n $(namespace) --ignore-not-found=true --wait=true {}
+	echo "finishclean:        `date +%Y-%m-%d' '%H:%M:%S.%N`"
 
 new_clean.%: ## clean obj
 	kubectl get $(word 2, $(subst ., ,$@)) -n $(namespace) -l $(word 3, $(subst ., ,$@))=true -o=jsonpath='{.items[*].metadata.name}' \
@@ -85,8 +87,8 @@ ds.%: ## create ds.<template>.<basename>.os:euler,role:client
 pvc.%: ## create pvc.<template>.<basename>.<count>.<size>->template:evs,nfs,obs,oss
 	bash $(current_dir)script2/benchmark-create-evs.sh --namespace $(namespace) --template $(current_dir)pvc-template/$(word 2, $(subst ., ,$@)).json --name $(word 3, $(subst ., ,$@))  --pvc-num $(word 4, $(subst ., ,$@)) --pvc-size $(word 5, $(subst ., ,$@)) |tee logs/$@.txt
 
-ytse_sg_1.%: ## create ytse_sg_1.<template>.<basename>.<sg_count>
-	bash $(current_dir)script2/create-ytse-sg.sh --namespace $(namespace) --template $(current_dir)sg-template/$(word 2, $(subst ., ,$@)).json --name $(word 3, $(subst ., ,$@)) --sg-num $(word 4, $(subst ., ,$@)) --sg-list $(sgs_ids) |tee logs/$@.txt
+ytse_sg_1.%: ## create ytse_sg_1.<template>.<basename>.<label>.<sg_count>
+	bash $(current_dir)script2/create-ytse-sg.sh --namespace $(namespace) --template $(current_dir)sg-template/$(word 2, $(subst ., ,$@)).json --name $(word 3, $(subst ., ,$@)) --selector $(word 4, $(subst ., ,$@)) --sg-num $(word 5, $(subst ., ,$@)) --sg-list $(sgs_ids) |tee logs/$@.txt
 
 ytse_sg.%: ## create ytse_sg.<basename>.<sg_count>
 	$(MAKE) $$(echo $@ |sed 's/ytse_sg/ytse_sg_1.sg/g') -f $(mkfile_path)
