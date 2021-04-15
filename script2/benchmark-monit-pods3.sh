@@ -36,15 +36,15 @@ function checkPodsRunning(){
         ready=`echo "$allnode" | grep -v "NAME" |grep -w True| wc -l`
         taint=`echo "$allnode" | grep -v "NAME" |grep -w True| grep -v map| wc -l`
         #target=`kubectl get hpa ${NAMESPACE} |grep ${BASE_NAME}|grep -oP '\d+%/'|grep -oP '\d+'` 
-        alleni=`kubectl get pni -ojsonpath='{range .items[*]}{.metadata.name}{"\t"}{..labels}{"\t"}{"\n"}{end}' -nkube-system`
+        alleni=`kubectl get pni -ojsonpath='{range .items[*]}{.metadata.name}{"\t"}{..labels}{"\t"}{.spec.securityGroup.defaultSecurityGroupIDs}{"\t"}{.status.securityGroupIDs}{"\t"}{.spec.securityGroup.securityGroupNames}{"\n"}{end}' -nkube-system`
         eni=`echo "$alleni" | grep -v master-eni| wc -l`
         eni_prebound=`echo "$alleni" | grep -v master-eni| grep -w PreBound|wc -l`
         eni_bound=`echo "$alleni" | grep -v master-eni| grep -w Bound|wc -l`
         subeni=`echo "$alleni" | grep master-eni| wc -l`
 
-        allsg=`kubectl get pni -ojsonpath='{range .items[?(.spec.securityGroup.securityGroupNames)]}{.metadata.name}{"\t"}{.spec.securityGroup.securityGroupNames}{"\t"}{.spec.securityGroup.defaultSecurityGroupIDs}{"\t"}{.status.securityGroupIDs}{"\n"}{end}' -nkube-system`
-        binds=`echo "$allsg" |grep $BASE_NAME |wc -l`
-        attaches=`echo "$allsg" |grep $BASE_NAME |grep ','|wc -l`
+        binds=`echo "$alleni" |grep fron|wc -l`
+        attaches=`echo "$alleni" |grep fron|awk '{if($3!=$4)print $1}' | wc -l`
+
 
         ret=`kubectl get pod ${NAMESPACE} | grep ${BASE_NAME}| grep -v "NAME"`
         
