@@ -200,6 +200,8 @@ count: ## count node for each pod
 	kubectl get pods -n $(namespace) -owide|awk '{print $$7}'|tr -s ' ' '\n'|sort |uniq -c|sort -r |awk '{print $$2, $$1}'
 count2: 
 	kubectl get pods -n $(namespace) -owide|awk '{print $$7"-"$$3}'|tr -s ' ' '\n'|sort |uniq -c|sort -r |awk '{print $$2, $$1}'
+count3:
+	kubectl get pni -ojsonpath='{range .items[*]}{.metadata.name}{"\t"}{..labels}{"\t"}{.spec.securityGroup.defaultSecurityGroupIDs}{"\t"}{.status.securityGroupIDs}{"\t"}{.spec.securityGroup.securityGroupNames}{"\n"}{end}' -nkube-system|grep -oE -e 'pni-node-name":"[^\"]+' -e 'pni-phase":"\w+'|xargs|sed 's/pni-node-name:/\n/g'|awk '{print $$1" "$$2}'|sort|uniq -c|awk '{print $$2" "$$3" "$$1}'|sort -r
 
 1: ## create one pod
 	. $(current_dir)/script/get_token.sh; \
