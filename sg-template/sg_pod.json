@@ -6,7 +6,11 @@
     "namespace": "${namespace}"
   },
   "spec": {
-    "podSelector": {},
+    "podSelector": {
+      "matchLabels": {
+        "app": "${name}"
+      }
+    },
     "securityGroups": [
       {
         "id": "${security_group_id}"
