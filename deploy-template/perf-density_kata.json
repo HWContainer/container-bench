@@ -55,11 +55,11 @@
             "name": "container-0",
             "resources": {
                "limits": {
-                  "cpu": "250m",
+                  "cpu": "CPU",
                   "memory": "MEMORY"
                },
                "requests": {
-                  "cpu": "250m",
+                  "cpu": "CPU",
                   "memory": "MEMORY"
                }
             },

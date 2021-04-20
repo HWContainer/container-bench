@@ -7,6 +7,7 @@ NAMESPACE=sina-test
 TEMPLATE_FILE=pod.json
 SELECT=""
 MEMORY=""
+CPU="250m"
 PIPE_COUNT=20
 PASSWORD=`head /dev/urandom |cksum |md5sum |cut -c 1-30`
 echo PASSWORD=$PASSWORD
@@ -164,6 +165,10 @@ while test $# -gt 0; do
             MEMORY=${2}
             shift 2
             ;;
+        --cpu)
+            CPU=${2}
+            shift 2
+            ;;
         *)
             echo "unknown option: $1 $2"
             exit 1
@@ -178,6 +183,7 @@ pod=${POD_TEMPLATE//NAMESPACE/${NAMESPACE}}
 pod=${pod//PINGSERVER/${PINGSERVER}}
 pod=${pod//POD_IMAGE/${POD_IMAGE}}
 pod=${pod//MEMORY/${MEMORY}}
+pod=${pod//CPU/${CPU}}
 genPods
 date +%Y-%m-%d' '%H:%M:%S > begin
 sleep 1

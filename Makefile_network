@@ -96,8 +96,14 @@ ytse_sg.%: ## create ytse_sg.<basename>.<sg_count>
 deploy.%: ## create deploy.<template>.<basename>.os:euler,role:client.<deploy>.<replicas>
 	PINGSERVER=$(PINGSERVER) bash $(current_dir)script2/create-deploy.sh --namespace $(namespace) --template $(current_dir)deploy-template/$(word 2, $(subst ., ,$@)).json --image $(swr)/$($(word 2, $(subst ., ,$@))) --name $(word 3, $(subst ., ,$@)) --select $(word 4, $(subst ., ,$@)) --deploy-num $(word 5, $(subst ., ,$@)) --pod-num $(word 6, $(subst ., ,$@)) |tee logs/$@.txt
 
-deploykata.%: ## create deploykata.<template>.<basename>.os:euler,role:client.<deploy>.<replicas>.<mem>
+deploykata7.%: ## create deploykata7.<template>.<basename>.os:euler,role:client.<deploy>.<replicas>.<mem>
 	PINGSERVER=$(PINGSERVER) bash $(current_dir)script2/create-deploy.sh --namespace $(namespace) --template $(current_dir)deploy-template/$(word 2, $(subst ., ,$@))_kata.json --image $(swr)/$($(word 2, $(subst ., ,$@))) --name $(word 3, $(subst ., ,$@)) --select $(word 4, $(subst ., ,$@)) --deploy-num $(word 5, $(subst ., ,$@)) --pod-num $(word 6, $(subst ., ,$@)) --mem $(word 7, $(subst ., ,$@)) |tee logs/$@.txt
+
+deploykata8.%: ## create deploykata7.<template>.<basename>.os:euler,role:client.<deploy>.<replicas>.<mem>.<cpu>
+	PINGSERVER=$(PINGSERVER) bash $(current_dir)script2/create-deploy.sh --namespace $(namespace) --template $(current_dir)deploy-template/$(word 2, $(subst ., ,$@))_kata.json --image $(swr)/$($(word 2, $(subst ., ,$@))) --name $(word 3, $(subst ., ,$@)) --select $(word 4, $(subst ., ,$@)) --deploy-num $(word 5, $(subst ., ,$@)) --pod-num $(word 6, $(subst ., ,$@)) --mem $(word 7, $(subst ., ,$@)) --cpu $(word 8, $(subst ., ,$@)) |tee logs/$@.txt
+
+deploykata.%: ## create deploykata.<template>.<basename>.os:euler,role:client.<deploy>.<replicas>.<mem>.<cpu?>
+	$(MAKE) $$(echo $@ | sed s/deploykata/deploykata$(words $(subst ., ,$@))/g) -f $(mkfile_path)
 
 deployhost.%: ## create deployhost.<template>.<basename>.os:euler,role:client.<deploynum>.<replicas>
 	bash $(current_dir)script2/create-deploy.sh --namespace $(namespace) --template $(current_dir)deploy-template/$(word 2, $(subst ., ,$@))_host.json --image $(swr)/$($(word 2, $(subst ., ,$@))) --name $(word 3, $(subst ., ,$@)) --select $(word 4, $(subst ., ,$@)) --deploy-num $(word 5, $(subst ., ,$@)) --pod-num $(word 6, $(subst ., ,$@)) |tee logs/$@.txt
@@ -284,6 +290,12 @@ watch.%: ## monit pods to record scaling
 
 watch3.%: ## monit pods to record scaling
 	bash $(current_dir)/script2/benchmark-monit-pods3.sh --namespace A --name $(word 2, $(subst ., ,$@)) | tee logs/$@.`date +%Y-%m-%d_%H:%M:%S`
+
+watchpni.%: ## monit pods to record scaling
+	bash $(current_dir)/script2/benchmark-monit-pods4.sh --namespace A --name $(word 2, $(subst ., ,$@)) | tee logs/$@.`date +%Y-%m-%d_%H:%M:%S`
+
+watchpod.%: ## monit pods to record scaling
+	bash $(current_dir)/script2/benchmark-monit-pods5.sh --namespace A --name $(word 2, $(subst ., ,$@)) | tee logs/$@.`date +%Y-%m-%d_%H:%M:%S`
 
 prepare_client: ## prepare fortio client
 	$(MAKE) $(foreach nodec, $(nodec_ip), $(nodec)) -f $(mkfile_path)
