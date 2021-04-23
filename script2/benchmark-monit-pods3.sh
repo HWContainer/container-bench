@@ -1,7 +1,5 @@
 #!/bin/bash
 
-DEPLOY_NUM=1
-POD_NUM=500
 BASE_NAME=sina-test
 NAMESPACE=sina-test
 
@@ -36,15 +34,16 @@ function checkPodsRunning(){
         ready=`echo "$allnode" | grep -v "NAME" |grep -w True| wc -l`
         taint=`echo "$allnode" | grep -v "NAME" |grep -w True| grep -v map| wc -l`
         #target=`kubectl get hpa ${NAMESPACE} |grep ${BASE_NAME}|grep -oP '\d+%/'|grep -oP '\d+'` 
-        alleni=`kubectl get pni -ojsonpath='{range .items[*]}{.metadata.name}{"\t"}{..labels}{"\t"}{.spec.securityGroup.defaultSecurityGroupIDs}{"\t"}{.status.securityGroupIDs}{"\t"}{.spec.securityGroup.securityGroupNames}{"\n"}{end}' -nkube-system`
-        eni=`echo "$alleni" | grep -v master-eni| wc -l`
-        eni_prebound=`echo "$alleni" | grep -v master-eni| grep -w PreBound|wc -l`
-        eni_bound=`echo "$alleni" | grep -v master-eni| grep -w Bound|wc -l`
-        subeni=`echo "$alleni" | grep master-eni| wc -l`
+        allpni=`kubectl get pni -ojsonpath='{range .items[*]}{.metadata.name}{"\t"}{..labels}{"\t"}{.spec.securityGroup.defaultSecurityGroupIDs}{"\t"}{.status.securityGroupIDs}{"\t"}{.spec.securityGroup.securityGroupNames}{"\n"}{end}' -nkube-system`
+        alleni=`echo "$allpni" | grep -v master-eni`
+        eni=`echo "$alleni" | wc -l`
+        eni_prebound=`echo "$alleni" | grep -w PreBound|wc -l`
+        eni_bound=`echo "$alleni" | grep -w Bound|wc -l`
+        subeni=`echo "$allpni" | grep master-eni| wc -l`
 
-        binds=`echo "$alleni" |grep fron|wc -l`
-        attaches=`echo "$alleni" |grep fron|awk '{if($3!=$4)print $1}' | wc -l`
-
+        updated=`echo "$allpni" | awk '{if ($5 != "") print $0}'`
+        binds=`echo "$updated" |wc -l`
+        attaches=`echo "$updated" |awk '{if($3!=$4)print $1}' | wc -l`
 
         ret=`kubectl get pod ${NAMESPACE} | grep ${BASE_NAME}| grep -v "NAME"`
         
@@ -64,7 +63,7 @@ function checkPodsRunning(){
         completed=$finishedPods
 
 
-        if [[ ${nodes} -ne ${pre_nodes} ]] || [[ ${ready} -ne ${pre_ready} ]] || [[ ${taint} -ne ${pre_taint} ]] || [[ ${running} -ne ${pre_running} ]] || [[ ${readys} -ne ${pre_readys} ]] || [[ ${pre_attaches} -ne ${attaches} ]] || [[ ${scheduled} -ne ${pre_scheduled} ]] || [[ ${created} -ne ${pre_created} ]] || [[ ${target} -ne ${pre_target} ]] || [[ ${completed} -ne ${pre_completed} ]] || [[ ${eni} -ne ${pre_eni} ]] || [[ ${subeni} -ne ${pre_subeni} ]] || [[ ${eni_prebound} -ne ${pre_eni_prebound} ]] || [[ ${eni_bound} -ne ${pre_eni_bound} ]] ; then
+        if [[ ${nodes} -ne ${pre_nodes} ]] || [[ ${ready} -ne ${pre_ready} ]] || [[ ${taint} -ne ${pre_taint} ]] || [[ ${running} -ne ${pre_running} ]] || [[ ${readys} -ne ${pre_readys} ]] || [[ ${pre_attaches} -ne ${attaches} ]] || [[ ${scheduled} -ne ${pre_scheduled} ]] || [[ ${created} -ne ${pre_created} ]] || [[ ${target} -ne ${pre_target} ]] || [[ ${completed} -ne ${pre_completed} ]] || [[ ${subeni} -ne ${pre_subeni} ]] || [[ ${eni_prebound} -ne ${pre_eni_prebound} ]] || [[ ${eni_bound} -ne ${pre_eni_bound} ]] || [[ ${pre_eni} -ne ${eni} ]]; then
             echo "at `date +%Y-%m-%d' '%H:%M:%S.%N`: $nodes $ready $taint $eni $eni_prebound $eni_bound, $subeni $binds $attaches, $created $scheduled $running $readys $completed"
             pre_nodes=$nodes
             pre_ready=$ready
@@ -85,10 +84,6 @@ function checkPodsRunning(){
     done
     echo "All pods Completed:        `date +%Y-%m-%d' '%H:%M:%S.%N`"
 }
-function getCostEach(){
-    kubectl get events -ojson ${NAMESPACE} > curl-get-event.log
-    kubectl get pods -ojson ${NAMESPACE} > curl-get-pods.log
-}
 
 SCRIPT=$(basename $0)
 while test $# -gt 0; do
@@ -98,8 +93,6 @@ while test $# -gt 0; do
             echo " "
             echo "     options:"
             echo "     -h, --help            show brief help"
-            echo "     --deploy-num          set deploy number to create. Default: 1"
-            echo "     --pod-num             set pods number to create. Default: 500"
             echo "     --name                set pod base name, will use this name and id to generate pod name. Default: sina-test"
             echo "     --namespace           set namespace to create pod, this namespace should already created. Default: sina-test"
             echo ""
@@ -111,14 +104,6 @@ while test $# -gt 0; do
             ;;
         --namespace)
             NAMESPACE=${2}
-            shift 2
-            ;;
-        --pod-num)
-            POD_NUM=${2}
-            shift 2
-            ;;
-        --deploy-num)
-            DEPLOY_NUM=${2}
             shift 2
             ;;
         *)
@@ -142,6 +127,3 @@ echo "at <date>: nodes ready readytaint eni prebound bound, subeni bind attach, 
 echo "---------------------------------------------"
 checkPodsRunning
 echo "Test finished:           `date +%Y-%m-%d' '%H:%M:%S.%N`"
-sleep 5
-getCostEach
-

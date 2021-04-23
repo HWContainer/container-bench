@@ -34,8 +34,9 @@ function checkPodsRunning(){
         eni_bound=`echo "$alleni" | grep -v master-eni| grep -w Bound|wc -l`
         subeni=`echo "$alleni" | grep master-eni| wc -l`
 
-        binds=`echo "$alleni" |grep fron|wc -l`
-        attaches=`echo "$alleni" |grep fron|awk '{if($3!=$4)print $1}' | wc -l`
+	updated=`echo "$alleni" | awk '{if ($5 != "") print $0}'`
+        binds=`echo "$updated" |wc -l`
+        attaches=`echo "$updated" |awk '{if($3!=$4)print $1}' | wc -l`
 
         if [[ ${pre_attaches} -ne ${attaches} ]] || [[ ${eni} -ne ${pre_eni} ]] || [[ ${subeni} -ne ${pre_subeni} ]] || [[ ${eni_prebound} -ne ${pre_eni_prebound} ]] || [[ ${eni_bound} -ne ${pre_eni_bound} ]] ; then
             echo "at `date +%Y-%m-%d' '%H:%M:%S.%N`: $eni $eni_prebound $eni_bound, $subeni $binds $attaches"
