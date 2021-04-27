@@ -286,7 +286,7 @@ outtest_host: clean ## test for outsize cluster
 	$(MAKE) $(foreach t, $(outpod_host) $(outsvc_host) $(outingress_host), $(t)) -f $(mkfile_path)
 
 watch.%: ## monit pods to record scaling
-	bash $(current_dir)/script2/benchmark-monit-pods2.sh --namespace A --name $(word 2, $(subst ., ,$@)) | tee logs/$@.`date +%Y-%m-%d_%H:%M:%S`
+	bash $(current_dir)/script2/benchmark-monit-pods6.sh --namespace A --name $(word 2, $(subst ., ,$@)) | tee logs/$@.`date +%Y-%m-%d_%H:%M:%S`
 
 watch3.%: ## monit pods to record scaling
 	bash $(current_dir)/script2/benchmark-monit-pods3.sh --namespace A --name $(word 2, $(subst ., ,$@)) | tee logs/$@.`date +%Y-%m-%d_%H:%M:%S`
