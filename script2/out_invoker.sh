@@ -12,11 +12,21 @@ python query_csv.py $prometheus_url $currentTimeStamp $nodec
 done
 # invoke 
 currentTimeStamp=`date +%s.%2N`
+
+if [[ -z "${half}" ]]; then
 for nodec in $nodec_ip; do
 {
 ssh -i key.pem -oStrictHostKeyChecking=no root@$nodec >$nodec.log 2>&1 ./fortio load -k -qps $qps -c $connect -t 120s --keepalive=false $svc_ip
 } &
 done
+else
+for nodec in $nodec_ip; do
+{
+ssh -i key.pem -oStrictHostKeyChecking=no root@$nodec >$nodec.log 2>&1 ./fortio load -k -qps $qps -c $connect -t 120s --keepalive=false --halfclose=true $svc_ip
+} &
+done
+fi
+
 wait 
 
 for nodec in $nodec_ip; do

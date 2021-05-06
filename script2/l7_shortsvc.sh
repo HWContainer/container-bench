@@ -18,11 +18,20 @@ python query_csv.py $prometheus_url $currentTimeStamp $nodeclient_ip
 done
 fi
 currentTimeStamp=`date +%s.%2N`
+if [[ -z "${half}" ]]; then
 for podclient_name in $podsclient_name; do
 {
 kubectl exec $podclient_name -n $ns -- /usr/bin/fortio load -qps $qps -c $connect -t 120s --keepalive=false http://$svc_ip > $podclient_name.log 2>&1
 } &
 done
+else
+for podclient_name in $podsclient_name; do
+{
+kubectl exec $podclient_name -n $ns -- /usr/bin/fortio load -qps $qps -c $connect -t 120s --keepalive=false --halfclose=true http://$svc_ip > $podclient_name.log 2>&1
+} &
+done
+
+fi 
 wait
 for podclient_name in $podsclient_name; do
 cat $podclient_name.log
