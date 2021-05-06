@@ -25,7 +25,7 @@ function checkPodsRunning(){
         allnode=`kubectl get nodes -ojsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.conditions[?(@.type=="Ready")].status}{"\t"}{..taints}{"\n"}{end}'`
         nodes=`echo "$allnode" | grep -v "NAME" | wc -l`
         ready=`echo "$allnode" | grep -v "NAME" |grep -w True| wc -l`
-        taint=`echo "$allnode" | grep -v "NAME" |grep -w True| grep -v map| wc -l`
+        taint=`echo "$allnode" | grep -v "NAME" |grep -w True| grep -v effect| wc -l`
 
         ret=`kubectl get pod ${NAMESPACE} | grep ${BASE_NAME}| grep -v "NAME"`
         
