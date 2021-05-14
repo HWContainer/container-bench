@@ -54,6 +54,9 @@ base_image: ## build image
 	cd $(current_dir)/script; docker build -t $(swr)/$(dnsperf) -<  $(current_dir)/dockerfiles/Dockerfile.dnsperf
 	docker push $(swr)/$(dnsperf)
 	docker rmi $(swr)/$(dnsperf)
+	cd $(current_dir)/script; docker build -t $(swr)/$(resource) -<  $(current_dir)/dockerfiles/Dockerfile.resource
+	docker push $(swr)/$(resource)
+	docker rmi $(swr)/$(resource)
 
 moreimage: ## build image special l layer and c size
 	dd if=/dev/urandom of=sample bs=1M count=$(c)
