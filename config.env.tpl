@@ -41,6 +41,9 @@ servers=
 clients=
 ingress_secret=
 az=
+region=
+nodec_ip=
 
+volumes=volumes
 sgs_ids=sgs_ids
 PINGSERVER=

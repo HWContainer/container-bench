@@ -1,0 +1,29 @@
+{
+    "apiVersion": "v1",
+    "kind": "PersistentVolumeClaim",
+    "metadata": {
+        "annotations": {
+            "volume.beta.kubernetes.io/storage-class": "CLASS",
+            "volume.beta.kubernetes.io/storage-provisioner": "flexvolume-huawei.com/fuxivol"
+        },
+        "labels": {
+            "failure-domain.beta.kubernetes.io/region": "REGION",
+            "failure-domain.beta.kubernetes.io/zone": "AZ"
+        },
+        "name": "EVS_PVC_NAME",
+        "namespace": "NAMESPACE"
+    },
+    "spec": {
+        "accessModes": [
+            "ReadWriteOnce"
+        ],
+        "resources": {
+            "requests": {
+                "storage": "STORAGE"
+            }
+        },
+        "volumeMode": "Filesystem",
+        "volumeName": "EVS_PV_NAME"
+    }
+}
+

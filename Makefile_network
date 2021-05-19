@@ -84,8 +84,11 @@ scale_nodes: ## make scale_nodes size=1 to scalce pool to size
 ds.%: ## create ds.<template>.<basename>.os:euler,role:client
 	bash $(current_dir)script2/create-ds.sh --namespace $(namespace) --template $(current_dir)ds-template/$(word 2, $(subst ., ,$@)).json --image $(swr)/$${$(word 2, $(subst ., ,$@)):-busybox} --name $(word 3, $(subst ., ,$@)) --select $(word 4, $(subst ., ,$@)) |tee logs/$@.txt
 
+pv.%: ## create pvc.<template>.<basename>.<count>.<size>->template:nfs-cce-sfsturbo,nfs-cce-sfsturbo-perf,static
+	bash $(current_dir)script2/benchmark-create-evs.sh --namespace $(namespace) --template $(current_dir)pvc-template/$(word 2, $(subst ., ,$@)).json --name $(word 3, $(subst ., ,$@))  --pv-num $(word 4, $(subst ., ,$@)) --pv-size $(word 5, $(subst ., ,$@)) --az $(az) --region $(region) --volumes $(volumes) |tee logs/$@.txt
+
 pvc.%: ## create pvc.<template>.<basename>.<count>.<size>->template:evs,nfs,obs,oss
-	bash $(current_dir)script2/benchmark-create-evs.sh --namespace $(namespace) --template $(current_dir)pvc-template/$(word 2, $(subst ., ,$@)).json --name $(word 3, $(subst ., ,$@))  --pvc-num $(word 4, $(subst ., ,$@)) --pvc-size $(word 5, $(subst ., ,$@)) |tee logs/$@.txt
+	bash $(current_dir)script2/benchmark-create-evs.sh --namespace $(namespace) --template $(current_dir)pvc-template/$(word 2, $(subst ., ,$@)).json --name $(word 3, $(subst ., ,$@))  --pvc-num $(word 4, $(subst ., ,$@)) --pvc-size $(word 5, $(subst ., ,$@)) --az $(az) --region $(region) --volumes $(volumes) |tee logs/$@.txt
 
 ytse_sg_1.%: ## create ytse_sg_1.<template>.<basename>.<label>.<sg_count>
 	bash $(current_dir)script2/create-ytse-sg.sh --namespace $(namespace) --template $(current_dir)sg-template/$(word 2, $(subst ., ,$@)).json --name $(word 3, $(subst ., ,$@)) --selector $(word 4, $(subst ., ,$@)) --sg-num $(word 5, $(subst ., ,$@)) --sg-list $(sgs_ids) |tee logs/$@.txt
