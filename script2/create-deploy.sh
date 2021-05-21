@@ -176,7 +176,7 @@ while test $# -gt 0; do
         esac
 done
 
-#getPingServer
+getPingServer
 #POD_TEMPLATE=`cat ${TEMPLATE_FILE} | sed "s/^[ \t]*//g"| sed ":a;N;s/\n//g;ta"`
 if [[ $MEMORY == "" ]]; then
 POD_TEMPLATE=`python pys/fix_deploy.py --template ${TEMPLATE_FILE} --select "${SELECT}" --instance ${POD_NUM}`

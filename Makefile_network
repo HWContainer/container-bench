@@ -75,6 +75,14 @@ new_clean.%: ## clean obj
 	kubectl get $(word 2, $(subst ., ,$@)) -n $(namespace) -l $(word 3, $(subst ., ,$@))=true -o=jsonpath='{.items[*].metadata.name}' \
 	|tr ' ' '\n'|xargs -i kubectl delete $(word 2, $(subst ., ,$@)) -n $(namespace) --ignore-not-found=true --wait=true {}
 
+pclean.%:
+	$(MAKE) $(foreach n, $(k8s_obj), pclean1.$(n).$(n).$(word 2, $(subst ., ,$@))) -f $(mkfile_path)
+
+pclean1.%: ## make pclean.<to_delete obj>.<to_check obj>.<prefix>
+	echo "begin clean:        `date +%Y-%m-%d' '%H:%M:%S.%N`"
+	bash $(current_dir)script2/delete-objs.sh $(word 2, $(subst ., ,$@)) $(word 3, $(subst ., ,$@)) $(namespace) $(word 4, $(subst ., ,$@)) |tee logs/$@.txt
+	echo "finishclean:        `date +%Y-%m-%d' '%H:%M:%S.%N`"
+
 label_nodes: ## make label_nodes labels=a:b,c:d to label nodes
 	echo "label node"
 

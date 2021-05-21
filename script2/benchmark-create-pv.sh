@@ -136,7 +136,7 @@ if cat ${TEMPLATE_FILE}|grep VOLUMEID>/dev/null; then
 fi
 
 #POD_TEMPLATE=`cat ${TEMPLATE_FILE} | sed "s/^[ \t]*//g"| sed ":a;N;s/\n//g;ta"`
-POD_TEMPLATE=`python pys/fix_pv.py --template ${TEMPLATE_FILE}`
+POD_TEMPLATE=`python pys/fix_pv.py --template ${TEMPLATE_FILE}  --prefix=${BASE_NAME}`
 pod=${POD_TEMPLATE//NAMESPACE/${NAMESPACE}}
 pod=${pod//STORAGE/${STORAGE}}
 pod=${pod//CLASS/${CLASS}}
