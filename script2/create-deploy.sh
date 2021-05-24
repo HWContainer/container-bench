@@ -179,9 +179,9 @@ done
 getPingServer
 #POD_TEMPLATE=`cat ${TEMPLATE_FILE} | sed "s/^[ \t]*//g"| sed ":a;N;s/\n//g;ta"`
 if [[ $MEMORY == "" ]]; then
-POD_TEMPLATE=`python pys/fix_deploy.py --template ${TEMPLATE_FILE} --select "${SELECT}" --instance ${POD_NUM}`
+POD_TEMPLATE=`python pys/fix_deploy.py --template ${TEMPLATE_FILE} --select "${SELECT}" --instance ${POD_NUM} --prefix ${BASE_NAME}`
 else
-POD_TEMPLATE=`python pys/fix_deploy.py --template ${TEMPLATE_FILE} --select "${SELECT}" --instance ${POD_NUM} --mem "${MEMORY}" --cpu "${CPU}"`
+POD_TEMPLATE=`python pys/fix_deploy.py --template ${TEMPLATE_FILE} --select "${SELECT}" --instance ${POD_NUM} --prefix ${BASE_NAME} --mem "${MEMORY}" --cpu "${CPU}"`
 fi
 pod=${POD_TEMPLATE//NAMESPACE/${NAMESPACE}}
 pod=${pod//PINGSERVER/${PINGSERVER}}
