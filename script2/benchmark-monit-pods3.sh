@@ -41,9 +41,9 @@ function checkPodsRunning(){
         eni_bound=`echo "$alleni" | grep -w Bound|wc -l`
         subeni=`echo "$allpni" | grep master-eni| wc -l`
 
-        updated=`echo "$allpni" | awk '{if ($5 != "") print $0}'`
+        updated=`echo "$allpni" | awk -F '\t' '{if ($5 != "") print $0}'`
         binds=`echo "$updated" |wc -l`
-        attaches=`echo "$updated" |awk '{if($3!=$4)print $1}' | wc -l`
+        attaches=`echo "$updated" |awk -F '\t' '{if($3!=$4)print $1}' | wc -l`
 
         ret=`kubectl get pod ${NAMESPACE} | grep ${BASE_NAME}| grep -v "NAME"`
         
